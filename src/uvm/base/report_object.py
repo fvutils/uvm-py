@@ -26,6 +26,7 @@
 #   permissions and limitations under the License.
 #------------------------------------------------------------------------------
 from uvm.base.object_globals import uvm_severity, UVM_INFO
+from uvm.base.object import uvm_object
 
 
 #------------------------------------------------------------------------------
@@ -79,7 +80,7 @@ from uvm.base.object_globals import uvm_severity, UVM_INFO
 #
 #------------------------------------------------------------------------------
 # @uvm-ieee 1800.2-2017 auto 6.3.1
-class uvm_report_object(): # extends uvm_object;
+class uvm_report_object(uvm_object): # extends uvm_object;
 
     def m_rh_init(self):
         if not self.m_rh_set:
@@ -92,7 +93,7 @@ class uvm_report_object(): # extends uvm_object;
 
     # @uvm-ieee 1800.2-2017 auto 6.3.2
     def __init__(self, name=""):
-        super.__init__(name)
+        super().__init__(name)
         self.m_rh = None
         self.m_rh_set = False
 
@@ -123,9 +124,9 @@ class uvm_report_object(): # extends uvm_object;
     # @uvm-ieee 1800.2-2017 auto 6.3.3.2
     def uvm_report_enabled(self, verbosity, severity = UVM_INFO, id = ""):
         if self.get_report_verbosity_level(severity, id) < verbosity:
-            return 0
+            return False
         else:
-            return 1
+            return True
 
     # Function -- NODOCS -- uvm_report
 

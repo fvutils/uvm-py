@@ -135,8 +135,8 @@ class uvm_component(uvm_report_object):
 #             pass
                        
         if name == "":
-            name.itoa(self.m_inst_count);
-            name = {"COMP_", name};
+            name.itoa(self.m_inst_count)
+            name = {"COMP_", name}
 
         if parent == self:
 # TODO:           `uvm_fatal("THISPARENT", "cannot set the parent of a component to itself")

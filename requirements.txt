@@ -1,0 +1,5 @@
+
+pyboolector
+-e git+https://github.com/fvutils/py-vsc#egg=py-vsc
+
+

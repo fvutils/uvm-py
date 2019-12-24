@@ -38,36 +38,33 @@
 
 # @uvm-ieee 1800.2-2017 auto F.4.1.1
 class uvm_coreservice_t():
+    
+    def __init__(self):
+        pass
 
     # @uvm-ieee 1800.2-2017 auto F.4.1.4.2
     def get_factory(self):
         pass
 
-
     # @uvm-ieee 1800.2-2017 auto F.4.1.4.3
     def set_factory(self, f):
         pass
-
 
     # @uvm-ieee 1800.2-2017 auto F.4.1.4.4
     def get_report_server(self):
         pass
 
-
     # @uvm-ieee 1800.2-2017 auto F.4.1.4.5
     def set_report_server(self, server):
         pass
-
 
     # @uvm-ieee 1800.2-2017 auto F.4.1.4.6
     def get_default_tr_database(self):
         pass
 
-
     # @uvm-ieee 1800.2-2017 auto F.4.1.4.7
     def set_default_tr_database(self, db):
         pass
-
 
     # @uvm-ieee 1800.2-2017 auto F.4.1.4.9
     def set_component_visitor(self, v):
@@ -75,7 +72,6 @@ class uvm_coreservice_t():
 
     def get_component_visitor(self):
         pass
-
 
     # @uvm-ieee 1800.2-2017 auto F.4.1.4.1
     def get_root(self):
@@ -167,7 +163,7 @@ class uvm_coreservice_t():
 
     @staticmethod
     def set(cs):
-        inst = cs;
+        uvm_coreservice_t.inst = cs;
 
 # Class: uvm_default_coreservice_t
 # Implementation of the uvm_default_coreservice_t as defined in
@@ -180,6 +176,7 @@ class uvm_coreservice_t():
 class uvm_default_coreservice_t(uvm_coreservice_t):
     
     def __init__(self):
+        super().__init__()
         self.factory = None
 
     # Function --NODOCS-- get_factory
@@ -190,14 +187,14 @@ class uvm_default_coreservice_t(uvm_coreservice_t):
         if self.factory == None:
             self.factory = uvm_default_factory()
 
-        return factory;
+        return self.factory
 
     # Function --NODOCS-- set_factory
     #
     # Sets the current uvm factory.
     # Please note: it is up to the user to preserve the contents of the original factory or delegate calls to the original factory
     def set_factory(self, f):
-        self.factory = f;
+        self.factory = f
 
 #     local uvm_tr_database tr_database;
 #     # Function --NODOCS-- get_default_tr_database
