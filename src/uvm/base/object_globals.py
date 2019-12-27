@@ -25,7 +25,7 @@
 #   the License for the specific language governing
 #   permissions and limitations under the License.
 #------------------------------------------------------------------------------
-from enum import Enum, auto
+from enum import Enum, IntFlag, auto
 import sys
 
 
@@ -139,7 +139,7 @@ def uvm_radix_to_string(radix):
 # UVM_SHALLOW   - Objects are shallow copied using default SV copy.
 # UVM_REFERENCE - Only object handles are copied.
 
-class uvm_recursion_policy_enum(Enum):
+class uvm_recursion_policy_enum(IntFlag):
     UVM_DEFAULT_POLICY = 0
     UVM_DEEP           = (1<<16)
     UVM_SHALLOW        = (1<<17)

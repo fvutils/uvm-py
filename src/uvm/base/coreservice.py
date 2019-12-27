@@ -25,7 +25,6 @@
 #   the License for the specific language governing
 #   permissions and limitations under the License.
 #----------------------------------------------------------------------
-from uvm.base.globals import uvm_init
 
 
 # Title: Core Service
@@ -158,6 +157,7 @@ class uvm_coreservice_t():
     @staticmethod
     def get():
         if uvm_coreservice_t.inst == None:
+            from uvm.base.globals import uvm_init
             uvm_init(None)
         
         return uvm_coreservice_t.inst
@@ -186,6 +186,7 @@ class uvm_default_coreservice_t(uvm_coreservice_t):
     # When no factory has been set before, instantiates a uvm_default_factory
     def get_factory(self):
         if self.factory == None:
+            from uvm.base.default_factory import uvm_default_factory
             self.factory = uvm_default_factory()
 
         return self.factory
@@ -247,9 +248,10 @@ class uvm_default_coreservice_t(uvm_coreservice_t):
 #         report_server=server;
 #     endfunction
 # 
-#     virtual function uvm_root get_root();
-#         return uvm_root::m_uvm_get_root();
-#     endfunction
+    def get_root(self):
+        from uvm.base.root import uvm_root
+        return uvm_root.m_uvm_get_root()
+        
 # 
 #     local uvm_visitor#(uvm_component) _visitor;
 #     # Function --NODOCS-- set_component_visitor

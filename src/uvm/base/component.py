@@ -1519,7 +1519,9 @@ class uvm_component(uvm_report_object):
 #   protected     uvm_component m_children[string];
 #   protected     uvm_component m_children_by_handle[uvm_component];
 #   extern protected virtual function bit  m_add_child(uvm_component child);
-#   extern local     virtual function void m_set_full_name();
+    def m_set_full_name(self):
+        print("TODO: m_set_full_name")
+        pass
 # 
 #   extern                   function void do_resolve_bindings();
 #   extern                   function void do_flush();

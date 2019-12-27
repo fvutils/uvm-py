@@ -27,6 +27,7 @@
 #------------------------------------------------------------------------------
 from uvm.base.object_globals import uvm_severity, UVM_INFO, UVM_MEDIUM
 from uvm.base.object import uvm_object
+from uvm.base.report_handler import uvm_report_handler
 
 
 #------------------------------------------------------------------------------
@@ -80,11 +81,13 @@ from uvm.base.object import uvm_object
 #
 #------------------------------------------------------------------------------
 # @uvm-ieee 1800.2-2017 auto 6.3.1
-class uvm_report_object(uvm_object): # extends uvm_object;
+class uvm_report_object(uvm_object):
 
     def m_rh_init(self):
         if not self.m_rh_set:
-            self.set_report_handler(uvm_report_handler.type_id.create(self.get_name()))
+            # TODO: Shouldn't need to use introspection for this
+            type_id = getattr(uvm_report_handler, "type_id")
+            self.set_report_handler(type_id.create(self.get_name()))
 
     # Function -- NODOCS -- new
     #

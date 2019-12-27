@@ -25,6 +25,7 @@
 #   the License for the specific language governing
 #   permissions and limitations under the License.
 #-----------------------------------------------------------------------------
+from uvm.base.void import uvm_void
 
 
 #------------------------------------------------------------------------------

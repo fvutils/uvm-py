@@ -28,7 +28,6 @@ from uvm.base.coreservice import uvm_coreservice_t, uvm_default_coreservice_t
 from uvm.base.object_globals import UVM_INFO, UVM_ERROR, UVM_LOW, UVM_FATAL,\
     UVM_NONE, UVM_MEDIUM, m_uvm_core_state, uvm_core_state, uvm_deferred_init
 import re
-from uvm.base.root import uvm_root
 
 
 # Title -- NODOCS -- Globals
@@ -43,6 +42,7 @@ from uvm.base.root import uvm_root
 # information.
 # @uvm-ieee 1800.2-2017 auto F.3.1.2
 def run_test (test_name=""):
+    print("run_test")
     cs = uvm_coreservice_t.get()
     top = cs.get_root()
     top.run_test(test_name)
@@ -294,6 +294,8 @@ def get_core_state():
 def uvm_init(cs=None):
     global m_uvm_core_state
     
+    print("uvm_init()")
+    
     dcs = None
    
     if get_core_state() != uvm_core_state.UNINITIALIZED:
@@ -348,8 +350,12 @@ def uvm_init(cs=None):
         i.initialize()
    
     uvm_deferred_init.clear()
-   
+
+    print("--> uvm_init -- get_root")   
+    from uvm.base.root import uvm_root
     top = uvm_root.get()
+    print("<-- uvm_init -- get_root")   
+    
     # These next calls were moved to uvm_init from uvm_root,
     # because they could emit messages, resulting in the
     # report server being queried, which causes uvm_init.
