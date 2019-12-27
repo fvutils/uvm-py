@@ -25,7 +25,7 @@
 #   the License for the specific language governing
 #   permissions and limitations under the License.
 #------------------------------------------------------------------------------
-from uvm.base.object_globals import uvm_severity, UVM_INFO
+from uvm.base.object_globals import uvm_severity, UVM_INFO, UVM_MEDIUM
 from uvm.base.object import uvm_object
 
 
@@ -170,17 +170,15 @@ class uvm_report_object(uvm_object): # extends uvm_object;
 #     # Function -- NODOCS -- uvm_report_warning
 # 
 #     # @uvm-ieee 1800.2-2017 auto 6.3.3.3
-#   virtual function void uvm_report_warning( string id,
-#                         string message,
-#                             int verbosity = UVM_MEDIUM,
-#                         string filename = "",
-#                         int line = 0,
-#                             string context_name = "",
-#                         bit report_enabled_checked = 0);
-# 
-#     uvm_report (UVM_WARNING, id, message, verbosity,
-#                 filename, line, context_name, report_enabled_checked);
-#   endfunction
+    def uvm_report_warning(self, id, message, 
+                        verbosity=UVM_MEDIUM,
+                        filename = "",
+                        line = 0,
+                        context_name = "",
+                        report_enabled_checked = False):
+        print("TODO: uvm_report_warning")
+#    uvm_report (UVM_WARNING, id, message, verbosity,
+#                filename, line, context_name, report_enabled_checked);
 # 
 #     # Function -- NODOCS -- uvm_report_error
 # 

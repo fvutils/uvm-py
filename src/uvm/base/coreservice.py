@@ -25,6 +25,7 @@
 #   the License for the specific language governing
 #   permissions and limitations under the License.
 #----------------------------------------------------------------------
+from uvm.base.globals import uvm_init
 
 
 # Title: Core Service
@@ -163,7 +164,7 @@ class uvm_coreservice_t():
 
     @staticmethod
     def set(cs):
-        uvm_coreservice_t.inst = cs;
+        uvm_coreservice_t.inst = cs 
 
 # Class: uvm_default_coreservice_t
 # Implementation of the uvm_default_coreservice_t as defined in

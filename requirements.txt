@@ -1,5 +1,6 @@
 
 pyboolector
 -e git+https://github.com/fvutils/py-vsc#egg=py-vsc
+-e git+https://github.com/mballance/cocotb.git@exp-latest#egg=cocotb
 
 

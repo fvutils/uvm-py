@@ -25,6 +25,10 @@
 #   permissions and limitations under the License.
 #------------------------------------------------------------------------------
 from uvm.base.coreservice import uvm_coreservice_t, uvm_default_coreservice_t
+from uvm.base.object_globals import UVM_INFO, UVM_ERROR, UVM_LOW, UVM_FATAL,\
+    UVM_NONE, UVM_MEDIUM, m_uvm_core_state, uvm_core_state, uvm_deferred_init
+import re
+from uvm.base.root import uvm_root
 
 
 # Title -- NODOCS -- Globals
@@ -105,87 +109,76 @@ def uvm_report(severity, id, message, verbosity = None,
 # 
 # # Function -- NODOCS -- uvm_report_info
 # 
-# # @uvm-ieee 1800.2-2017 auto F.3.2.3
-# function void uvm_report_info(string id,
-#                   string message,
-#                               int verbosity = UVM_MEDIUM,
-#                   string filename = "",
-#                   int line = 0,
-#                               string context_name = "",
-#                               bit report_enabled_checked = 0);
-#   uvm_root top;
-#   uvm_coreservice_t cs;
-#   cs = uvm_coreservice_t::get();
-#   top = cs.get_root();
-#   top.uvm_report_info(id, message, verbosity, filename, line, context_name,
-#     report_enabled_checked);
-# endfunction
-# 
-# 
-# # Function -- NODOCS -- uvm_report_warning
-# 
-# # @uvm-ieee 1800.2-2017 auto F.3.2.3
-# function void uvm_report_warning(string id,
-#                                  string message,
-#                                  int verbosity = UVM_MEDIUM,
-#                  string filename = "",
-#                  int line = 0,
-#                                  string context_name = "",
-#                                  bit report_enabled_checked = 0);
-#   uvm_root top;
-#   uvm_coreservice_t cs;
-#   cs = uvm_coreservice_t::get();
-#   top = cs.get_root();
-#   top.uvm_report_warning(id, message, verbosity, filename, line, context_name,
-#     report_enabled_checked);
-# endfunction
-# 
-# 
-# # Function -- NODOCS -- uvm_report_error
-# 
-# # @uvm-ieee 1800.2-2017 auto F.3.2.3
-# function void uvm_report_error(string id,
-#                                string message,
-#                                int verbosity = UVM_NONE,
-#                    string filename = "",
-#                    int line = 0,
-#                                string context_name = "",
-#                                bit report_enabled_checked = 0);
-#   uvm_root top;
-#   uvm_coreservice_t cs;
-#   cs = uvm_coreservice_t::get();
-#   top = cs.get_root();
-#   top.uvm_report_error(id, message, verbosity, filename, line, context_name,
-#     report_enabled_checked);
-# endfunction
-# 
-# 
-# # Function -- NODOCS -- uvm_report_fatal
-# #
-# # These methods, defined in package scope, are convenience functions that
-# # delegate to the corresponding component methods in ~uvm_top~. They can be
-# # used in module-based code to use the same reporting mechanism as class-based
-# # components. See <uvm_report_object> for details on the reporting mechanism. 
-# #
-# # *Note:* Verbosity is ignored for warnings, errors, and fatals to ensure users
-# # do not inadvertently filter them out. It remains in the methods for backward
-# # compatibility.
-# 
-# # @uvm-ieee 1800.2-2017 auto F.3.2.3
-# function void uvm_report_fatal(string id,
-#                            string message,
-#                                int verbosity = UVM_NONE,
-#                    string filename = "",
-#                    int line = 0,
-#                                string context_name = "",
-#                                bit report_enabled_checked = 0);
-#   uvm_root top;
-#   uvm_coreservice_t cs;
-#   cs = uvm_coreservice_t::get();
-#   top = cs.get_root();
-#   top.uvm_report_fatal(id, message, verbosity, filename, line, context_name,
-#     report_enabled_checked);
-# endfunction
+# @uvm-ieee 1800.2-2017 auto F.3.2.3
+def uvm_report_info(id,
+                message,
+                verbosity = UVM_MEDIUM,
+                filename = "",
+                line = 0,
+                context_name = "",
+                report_enabled_checked = False):
+    cs = uvm_coreservice_t.get()
+    top = cs.get_root()
+    top.uvm_report_info(id, message, verbosity, filename, line, context_name,
+            report_enabled_checked)
+ 
+ 
+# Function -- NODOCS -- uvm_report_warning
+ 
+# @uvm-ieee 1800.2-2017 auto F.3.2.3
+def uvm_report_warning(id,
+                       message,
+                       verbosity = UVM_MEDIUM,
+                       filename = "",
+                       line = 0,
+                       context_name = "",
+                       report_enabled_checked = False):
+    cs = uvm_coreservice_t.get()
+    top = cs.get_root()
+    top.uvm_report_warning(id, message, verbosity, filename, line, context_name,
+                    report_enabled_checked)
+ 
+ 
+# Function -- NODOCS -- uvm_report_error
+ 
+# @uvm-ieee 1800.2-2017 auto F.3.2.3
+def uvm_report_error(id,
+                message,
+                verbosity = UVM_NONE,
+                filename = "",
+                line = 0,
+                context_name = "",
+                report_enabled_checked = False):
+    cs = uvm_coreservice_t.get()
+    top = cs.get_root()
+    top.uvm_report_error(id, message, verbosity, filename, line, context_name,
+            report_enabled_checked)
+ 
+ 
+# Function -- NODOCS -- uvm_report_fatal
+#
+# These methods, defined in package scope, are convenience functions that
+# delegate to the corresponding component methods in ~uvm_top~. They can be
+# used in module-based code to use the same reporting mechanism as class-based
+# components. See <uvm_report_object> for details on the reporting mechanism. 
+#
+# *Note:* Verbosity is ignored for warnings, errors, and fatals to ensure users
+# do not inadvertently filter them out. It remains in the methods for backward
+# compatibility.
+ 
+# @uvm-ieee 1800.2-2017 auto F.3.2.3
+def uvm_report_fatal(id,
+                    message,
+                    verbosity = UVM_NONE,
+                    filename = "",
+                    line = 0,
+                    context_name = "",
+                    report_enabled_checked = False):
+    cs = uvm_coreservice_t.get()
+    top = cs.get_root()
+    top.uvm_report_fatal(id, message, verbosity, filename, line, context_name,
+                    report_enabled_checked)
+    
 # 
 # 
 # # Function -- NODOCS -- uvm_process_report_message
@@ -240,22 +233,19 @@ def uvm_report(severity, id, message, verbosity = None,
 #   end
 # endfunction
 # 
-#   
-# #----------------------------------------------------------------------------
-# #
-# # Group: Miscellaneous
-# #
-# # The library implements the following public API at the package level beyond
-# # what is documented in IEEE 1800.2.
-# #----------------------------------------------------------------------------
-# 
-# # @uvm-ieee 1800.2-2017 auto F.3.3.1
-# function bit uvm_is_match (string expr, string str);
-#   string s;
-#   s = uvm_glob_to_re(expr);
-#   return (uvm_re_match(s, str) == 0);
-# endfunction
-# 
+   
+#----------------------------------------------------------------------------
+#
+# Group: Miscellaneous
+#
+# The library implements the following public API at the package level beyond
+# what is documented in IEEE 1800.2.
+#----------------------------------------------------------------------------
+ 
+# @uvm-ieee 1800.2-2017 auto F.3.3.1
+def uvm_is_match(expr, str):
+    return re.match(expr, str)
+
 # 
 # parameter UVM_LINE_WIDTH = `UVM_LINE_WIDTH;
 # parameter UVM_NUM_LINES = `UVM_NUM_LINES;
@@ -275,10 +265,10 @@ def uvm_report(severity, id, message, verbosity = None,
 #   $swrite(uvm_string_to_bits, "%0s", str);
 # endfunction
 # 
-# # @uvm-ieee 1800.2-2017 auto F.3.1.1
-# function uvm_core_state get_core_state();
-#         return m_uvm_core_state;
-# endfunction
+# @uvm-ieee 1800.2-2017 auto F.3.1.1
+def get_core_state():
+    return m_uvm_core_state
+
 # 
 # Function: uvm_init
 # Implementation of uvm_init, as defined in section
@@ -302,10 +292,12 @@ def uvm_report(severity, id, message, verbosity = None,
    
 # @uvm-ieee 1800.2-2017 auto F.3.1.3
 def uvm_init(cs=None):
+    global m_uvm_core_state
+    
     dcs = None
    
-    if get_core_state() !=UVM_CORE_UNINITIALIZED:
-        if get_core_state() == UVM_CORE_PRE_INIT:
+    if get_core_state() != uvm_core_state.UNINITIALIZED:
+        if get_core_state() == uvm_core_state.PRE_INIT:
             # If we're in this state, something very strange has happened.
             # We've called uvm_init, and it is actively assigning the
             # core service, but the core service isn't actually set yet.
@@ -313,22 +305,23 @@ def uvm_init(cs=None):
             # we have a race occurring between two threads.  Either way, 
             # this is non-recoverable.  We're going to setup using the default
             # core service, and immediately fatal out.
-            dcs = None# TODO: new();
-            uvm_coreservice_t.set(dcs);
-            `uvm_fatal("UVM/INIT/MULTI", "Non-recoverable race during uvm_init")
+            dcs = None # TODO: new();
+            uvm_coreservice_t.set(dcs)
+            # TODO: error handling
+#            `uvm_fatal("UVM/INIT/MULTI", "Non-recoverable race during uvm_init")
         else:
             
             # After PRE_INIT, we can check to see if this is worth reporting
-      # as a warning.  We only report it if the value for ~cs~ is _not_
-      # the current core service, and ~cs~ is not null.
-      uvm_coreservice_t actual;
-      actual = uvm_coreservice_t::get();
-      if ((cs != actual) && (cs != null))
-        `uvm_warning("UVM/INIT/MULTI", "uvm_init() called after library has already completed initialization, subsequent calls are ignored!")
-    end
-    return;
-  end
-  m_uvm_core_state=UVM_CORE_PRE_INIT;
+            # as a warning.  We only report it if the value for ~cs~ is _not_
+            # the current core service, and ~cs~ is not null.
+            actual = uvm_coreservice_t.get()
+            if cs != actual and cs is not None:
+                # TODO: error handling
+#                `uvm_warning("UVM/INIT/MULTI", "uvm_init() called after library has already completed initialization, subsequent calls are ignored!")
+                pass
+        return
+
+    m_uvm_core_state = uvm_core_state.PRE_INIT
  
     # We control the implementation of uvm_default_coreservice_t::new
     # and uvm_coreservice_t::set (which is undocumented).  As such,
@@ -349,12 +342,12 @@ def uvm_init(cs=None):
     # constructor that relies on the specialized
     # root being constructed...  but there's not
     # really anything that can be done about that.
-    m_uvm_core_state = UVM_CORE_INITIALIZING
+    m_uvm_core_state = uvm_core_state.INITIALIZING
    
     for i in uvm_deferred_init:
         i.initialize()
    
-    uvm_deferred_init.delete()
+    uvm_deferred_init.clear()
    
     top = uvm_root.get()
     # These next calls were moved to uvm_init from uvm_root,
@@ -366,7 +359,7 @@ def uvm_init(cs=None):
     # change individual component verbosity.
     top.m_check_verbosity()
      
-    m_uvm_core_state = UVM_CORE_INITIALIZED
+    m_uvm_core_state = uvm_core_state.INITIALIZED
 
 # 
 # #----------------------------------------------------------------------------

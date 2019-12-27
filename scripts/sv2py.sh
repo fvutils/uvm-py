@@ -14,8 +14,12 @@ sed -i \
   -e 's%function new%def __init__%g' \
   -e 's%==null% is None%g' \
   -e 's%== null% is None%g' \
+  -e 's%else if%elif:%g' \
   -e 's%&&% and %g' \
   -e 's%||% or %g' \
+  -e 's%push_back%append%g' \
+  -e 's%delete()%clear()%g' \
   -e 's%=null%=None%g' \
+  -e 's%\.\([a-zA-Z_][a-zA-Z0-9_ ]*\)(\([a-zA-Z_][a-zA-Z0-9_ ]*\))%\1=\2%g' \
   $file
 

@@ -13,7 +13,7 @@
 #   All Rights Reserved Worldwide
 #
 #   Licensed under the Apache License, Version 2.0 (the
-#   "License"); you may not use this file except in
+#   "License"); you may not use self file except in
 #   compliance with the License.  You may obtain a copy of
 #   the License at
 #
@@ -34,37 +34,27 @@
 # Internal class.
 #------------------------------------------------------------------------------
 
-class uvm_factory_override;
+class uvm_factory_override():
    
-  string full_inst_path;
-  m_uvm_factory_type_pair_t orig;
-  m_uvm_factory_type_pair_t ovrd;
-  bit replace;
-  bit selected;
-  int unsigned used;
-  bit has_wildcard;
-   
-  def __init__ (string full_inst_path="",
-                string orig_type_name="",
-                uvm_object_wrapper orig_type=None,
-                uvm_object_wrapper ovrd_type,
-                string ovrd_type_name="",
-                bit replace=0);
+    def __init__(self,
+                full_inst_path, # =""
+                orig_type_name, # = ""
+                orig_type, # =None
+                ovrd_type,
+                ovrd_type_name, # =""
+                replace=False):
       
-    this.full_inst_path= full_inst_path;
-    this.orig.m_type_name = orig_type_name;
-    this.orig.m_type      = orig_type;
-    this.ovrd.m_type_name = ovrd_type_name;
-    this.ovrd.m_type      = ovrd_type;
-    this.replace          = replace;
-    this.has_wildcard     = m_has_wildcard(full_inst_path); 
-  endfunction
+        self.full_inst_path   = full_inst_path
+        self.orig = (orig_type, orig_type_name)
+        self.ovrd = (ovrd_type, ovrd_type_name)
+        self.replace          = replace
+        self.has_wildcard     = self.m_has_wildcard(full_inst_path)
+        self.used             = 0
+        self.selected         = False
+        
+    def m_has_wildcard(self, nm):
+        for c in nm:
+            if c == "*" or c == "?":
+                return True
+        return False
   
-  function bit m_has_wildcard(string nm);
-    foreach (nm[i]) 
-      if(nm[i] == "*" || nm[i] == "?") return 1;
-    return 0;
-  endfunction
-  
-  
-endclass

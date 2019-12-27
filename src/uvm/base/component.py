@@ -105,11 +105,20 @@ class uvm_component(uvm_report_object):
         
         # Variable declarations
         self.m_name = ""
-        self.event_pool = None
+        self.event_pool = None # uvm_event_pool
         self.recording_detail = 0 # UVM_NONE
         self.m_verbosity_settings = []
         self.m_unsupported_resource_base = None
         
+        self.m_domain = None # uvm_domain
+        self.m_phase_imps = {} # uvm_phase,uvm_phase
+        self.m_current_phase = None # uvm_phase
+        self.m_build_done = False
+        self.m_phasing_active = False
+        
+        self.m_parent = None # uvm_component
+        self.m_children = {} # string,uvm_component
+        self.m_children_by_handle = {} # uvm_component,uvm_component
         
 
         # If uvm_top, reset name to "" so it doesn't show in full paths then return

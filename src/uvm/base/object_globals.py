@@ -25,8 +25,8 @@
 #   the License for the specific language governing
 #   permissions and limitations under the License.
 #------------------------------------------------------------------------------
-from enum import Enum
-from _locale import RADIXCHAR
+from enum import Enum, auto
+import sys
 
 
 #------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ class uvm_radix_enum(Enum):
     UVM_REAL_EXP  = 0xd000000
     UVM_NORADIX   = 0
 
-UVM_RADIX = 0xf000000; #4 bits setting the radix
+UVM_RADIX = 0xf000000 #4 bits setting the radix
 
 
 # Function- uvm_radix_to_string
@@ -139,12 +139,11 @@ def uvm_radix_to_string(radix):
 # UVM_SHALLOW   - Objects are shallow copied using default SV copy.
 # UVM_REFERENCE - Only object handles are copied.
 
-typedef enum uvm_field_flag_t { 
-  UVM_DEFAULT_POLICY = 0, 
-  UVM_DEEP           = (1<<16), 
-  UVM_SHALLOW        = (1<<17), 
-  UVM_REFERENCE      = (1<<18)
- } uvm_recursion_policy_enum;
+class uvm_recursion_policy_enum(Enum):
+    UVM_DEFAULT_POLICY = 0
+    UVM_DEEP           = (1<<16)
+    UVM_SHALLOW        = (1<<17)
+    UVM_REFERENCE      = (1<<18)
 
 # UVM_RECURSION is a mask for uvm_recursion_policy_enum, similar to
 # UVM_RADIX for uvm_radix_enum.  Flags can be AND'd with the mask
@@ -153,7 +152,10 @@ typedef enum uvm_field_flag_t {
 #| uvm_recursion_policy_enum foo;
 #| foo = uvm_recursion_policy_enum'(flags&UVM_RECURSION);
 #
-parameter UVM_RECURSION = (UVM_DEEP|UVM_SHALLOW|UVM_REFERENCE);
+UVM_RECURSION = (
+    uvm_recursion_policy_enum.UVM_DEEP
+    | uvm_recursion_policy_enum.UVM_SHALLOW
+    | uvm_recursion_policy_enum.UVM_REFERENCE)
 
 
 # Enum --NODOCS-- uvm_active_passive_enum
@@ -163,8 +165,9 @@ parameter UVM_RECURSION = (UVM_DEEP|UVM_SHALLOW|UVM_REFERENCE);
 #
 # UVM_PASSIVE - "Passive" mode
 # UVM_ACTIVE  - "Active" mode
-typedef enum bit { UVM_PASSIVE=0, UVM_ACTIVE=1 } uvm_active_passive_enum;
-
+class uvm_active_passive_enum(Enum):
+    UVM_PASSIVE=0
+    UVM_ACTIVE=1
 
 # Parameter --NODOCS-- `uvm_field_* macro flags
 #
@@ -190,56 +193,51 @@ typedef enum bit { UVM_PASSIVE=0, UVM_ACTIVE=1 } uvm_active_passive_enum;
 #
 # UVM_READONLY  - Object field will NOT be automatically configured.
 
-parameter uvm_field_flag_t UVM_MACRO_NUMFLAGS    = 19;
+UVM_MACRO_NUMFLAGS    = 19
 #A=ABSTRACT Y=PHYSICAL
 #F=REFERENCE, S=SHALLOW, D=DEEP
 #K=PACK, R=RECORD, P=PRINT, M=COMPARE, C=COPY
 #--------------------------- AYFSD K R P M C
-parameter uvm_field_flag_t UVM_DEFAULT     = 'b000010101010101;
-parameter uvm_field_flag_t UVM_ALL_ON      = 'b000000101010101;
-parameter uvm_field_flag_t UVM_FLAGS_ON    = 'b000000101010101;
-parameter uvm_field_flag_t UVM_FLAGS_OFF   = 0;
+UVM_DEFAULT     = 0b000010101010101
+UVM_ALL_ON      = 0b000000101010101
+UVM_FLAGS_ON    = 0b000000101010101 
+UVM_FLAGS_OFF   = 0
 
 #Values are OR'ed into a 32 bit value
 #and externally
-parameter uvm_field_flag_t UVM_COPY         = (1<<0);
-parameter uvm_field_flag_t UVM_NOCOPY       = (1<<1);
-parameter uvm_field_flag_t UVM_COMPARE      = (1<<2);
-parameter uvm_field_flag_t UVM_NOCOMPARE    = (1<<3);
-parameter uvm_field_flag_t UVM_PRINT        = (1<<4);
-parameter uvm_field_flag_t UVM_NOPRINT      = (1<<5);
-parameter uvm_field_flag_t UVM_RECORD       = (1<<6);
-parameter uvm_field_flag_t UVM_NORECORD     = (1<<7);
-parameter uvm_field_flag_t UVM_PACK         = (1<<8);
-parameter uvm_field_flag_t UVM_NOPACK       = (1<<9);
-parameter uvm_field_flag_t UVM_UNPACK       = (1<<10);
-parameter uvm_field_flag_t UVM_NOUNPACK     = UVM_NOPACK;
-parameter uvm_field_flag_t UVM_SET          = (1<<11);
-parameter uvm_field_flag_t UVM_NOSET        = (1<<12);
-`ifdef UVM_ENABLE_DEPRECATED_API
-parameter uvm_field_flag_t UVM_PHYSICAL     = (1<<13);
-parameter uvm_field_flag_t UVM_ABSTRACT     = (1<<14);
-parameter uvm_field_flag_t UVM_READONLY     = UVM_NOSET;
-`endif
-parameter uvm_field_flag_t UVM_NODEFPRINT   = (1<<15); #??
-#parameter UVM_DEEP         = (1<<16);
-#parameter UVM_SHALLOW      = (1<<17);
-#parameter UVM_REFERENCE    = (1<<18);
+UVM_COPY         = (1<<0)
+UVM_NOCOPY       = (1<<1)
+UVM_COMPARE      = (1<<2)
+UVM_NOCOMPARE    = (1<<3)
+UVM_PRINT        = (1<<4)
+UVM_NOPRINT      = (1<<5)
+UVM_RECORD       = (1<<6)
+UVM_NORECORD     = (1<<7)
+UVM_PACK         = (1<<8)
+UVM_NOPACK       = (1<<9)
+UVM_UNPACK       = (1<<10)
+UVM_NOUNPACK     = UVM_NOPACK
+UVM_SET          = (1<<11)
+UVM_NOSET        = (1<<12)
+UVM_NODEFPRINT   = (1<<15) #??
+UVM_DEEP         = (1<<16)
+UVM_SHALLOW      = (1<<17)
+UVM_REFERENCE    = (1<<18)
 
 #Extra values that are used for extra methods
-parameter uvm_field_flag_t UVM_MACRO_EXTRAS  = (1<<UVM_MACRO_NUMFLAGS);
-parameter uvm_field_flag_t UVM_FLAGS         = UVM_MACRO_EXTRAS+1;
-parameter uvm_field_flag_t UVM_CHECK_FIELDS  = UVM_MACRO_EXTRAS+2;
-parameter uvm_field_flag_t UVM_END_DATA_EXTRA = UVM_MACRO_EXTRAS+3;
+UVM_MACRO_EXTRAS  = (1<<UVM_MACRO_NUMFLAGS)
+UVM_FLAGS         = UVM_MACRO_EXTRAS+1
+UVM_CHECK_FIELDS  = UVM_MACRO_EXTRAS+2
+UVM_END_DATA_EXTRA = UVM_MACRO_EXTRAS+3
 
 
 #Get and set methods (in uvm_object). Used by the set/get* functions
 #to tell the object what operation to perform on the fields.
-parameter uvm_field_flag_t UVM_START_FUNCS   = UVM_END_DATA_EXTRA+1;
-parameter uvm_field_flag_t UVM_END_FUNCS     = UVM_START_FUNCS+1;
+UVM_START_FUNCS   = UVM_END_DATA_EXTRA+1
+UVM_END_FUNCS     = UVM_START_FUNCS+1
 
 #Global string variables
-string uvm_aa_string_key;
+uvm_aa_string_key = ""
 
 
 
@@ -287,20 +285,15 @@ UVM_FATAL = uvm_severity.UVM_FATAL
 #                   interactive mode.
 #   UVM_RM_RECORD - Sends the report to the recorder
 
-
-typedef int uvm_action;
-
-typedef enum
-{
-  UVM_NO_ACTION = 'b0000000,
-  UVM_DISPLAY   = 'b0000001,
-  UVM_LOG       = 'b0000010,
-  UVM_COUNT     = 'b0000100,
-  UVM_EXIT      = 'b0001000,
-  UVM_CALL_HOOK = 'b0010000,
-  UVM_STOP      = 'b0100000,
-  UVM_RM_RECORD = 'b1000000
-} uvm_action_type;
+class uvm_action_type(Enum):
+    UVM_NO_ACTION = 0b0000000
+    UVM_DISPLAY   = 0b0000001
+    UVM_LOG       = 0b0000010
+    UVM_COUNT     = 0b0000100
+    UVM_EXIT      = 0b0001000
+    UVM_CALL_HOOK = 0b0010000
+    UVM_STOP      = 0b0100000
+    UVM_RM_RECORD = 0b1000000
 
 
 # Enum --NODOCS-- uvm_verbosity
@@ -318,15 +311,21 @@ typedef enum
 #  UVM_FULL   - Report is issued if configured verbosity is set to UVM_FULL
 #               or above.
 
-typedef enum
-{
-  UVM_NONE   = 0,
-  UVM_LOW    = 100,
-  UVM_MEDIUM = 200,
-  UVM_HIGH   = 300,
-  UVM_FULL   = 400,
-  UVM_DEBUG  = 500
-} uvm_verbosity;
+class uvm_verbosity(Enum):
+    UVM_NONE   = 0
+    UVM_LOW    = 100
+    UVM_MEDIUM = 200
+    UVM_HIGH   = 300
+    UVM_FULL   = 400
+    UVM_DEBUG  = 500
+
+
+UVM_NONE   = uvm_verbosity.UVM_NONE
+UVM_LOW    = uvm_verbosity.UVM_LOW
+UVM_MEDIUM = uvm_verbosity.UVM_MEDIUM
+UVM_HIGH   = uvm_verbosity.UVM_HIGH
+UVM_FULL   = uvm_verbosity.UVM_FULL
+UVM_DEBUG  = uvm_verbosity.UVM_DEBUG
 
 
 
@@ -347,13 +346,10 @@ typedef enum
 #                      parameter, and it is bound to the component that
 #                      implements the interface.
 
-typedef enum
-{
-  UVM_PORT ,
-  UVM_EXPORT ,
-  UVM_IMPLEMENTATION
-} uvm_port_type_e;
-
+class uvm_port_type_e(Enum):
+    UVM_PORT = auto()
+    UVM_EXPORT = auto()
+    UVM_IMPLEMENTATION = auto()
 
 #-----------------
 # Group --NODOCS-- Sequences
@@ -373,18 +369,16 @@ typedef enum
 #                             will specify the next sequence to grant.
 
 
-typedef enum
-{
-  UVM_SEQ_ARB_FIFO,
-  UVM_SEQ_ARB_WEIGHTED,
-  UVM_SEQ_ARB_RANDOM,
-  UVM_SEQ_ARB_STRICT_FIFO,
-  UVM_SEQ_ARB_STRICT_RANDOM,
-  UVM_SEQ_ARB_USER
-} uvm_sequencer_arb_mode;
+class uvm_sequencer_arb_mode(Enum):
+    UVM_SEQ_ARB_FIFO = auto()
+    UVM_SEQ_ARB_WEIGHTED = auto()
+    UVM_SEQ_ARB_RANDOM = auto()
+    UVM_SEQ_ARB_STRICT_FIFO = auto()
+    UVM_SEQ_ARB_STRICT_RANDOM = auto()
+    UVM_SEQ_ARB_USER = auto()
 
-
-typedef uvm_sequencer_arb_mode UVM_SEQ_ARB_TYPE; # backward compat
+# TODO:
+# typedef uvm_sequencer_arb_mode UVM_SEQ_ARB_TYPE; # backward compat
 
 
 # Enum --NODOCS-- uvm_sequence_state_enum
@@ -413,20 +407,19 @@ typedef uvm_sequencer_arb_mode UVM_SEQ_ARB_TYPE; # backward compat
 #                          <uvm_sequence_base::kill()> on the sequence.
 # UVM_FINISHED           - The sequence is completely finished executing.
 
-typedef enum
-{
-  UVM_CREATED   = 1,
-  UVM_PRE_START = 2,
-  UVM_PRE_BODY  = 4,
-  UVM_BODY      = 8,
-  UVM_POST_BODY = 16,
-  UVM_POST_START= 32,
-  UVM_ENDED     = 64,
-  UVM_STOPPED   = 128,
-  UVM_FINISHED  = 256
-} uvm_sequence_state;
+class uvm_sequence_state(Enum):
+    UVM_CREATED   = 1
+    UVM_PRE_START = 2
+    UVM_PRE_BODY  = 4
+    UVM_BODY      = 8
+    UVM_POST_BODY = 16
+    UVM_POST_START= 32
+    UVM_ENDED     = 64
+    UVM_STOPPED   = 128
+    UVM_FINISHED  = 256
 
-typedef uvm_sequence_state uvm_sequence_state_enum; # backward compat
+# TODO
+# typedef uvm_sequence_state uvm_sequence_state_enum; # backward compat
 
 
 # Enum --NODOCS-- uvm_sequence_lib_mode
@@ -438,15 +431,11 @@ typedef uvm_sequence_state uvm_sequence_state_enum; # backward compat
 # UVM_SEQ_LIB_ITEM  - Emit only items, no sequence execution
 # UVM_SEQ_LIB_USER  - Apply a user-defined random-selection algorithm
 
-typedef enum
-{
-  UVM_SEQ_LIB_RAND,
-  UVM_SEQ_LIB_RANDC,
-  UVM_SEQ_LIB_ITEM,
-  UVM_SEQ_LIB_USER
-} uvm_sequence_lib_mode;
-
-
+class uvm_sequence_lib_mode(Enum):
+    UVM_SEQ_LIB_RAND = auto()
+    UVM_SEQ_LIB_RANDC = auto()
+    UVM_SEQ_LIB_ITEM = auto()
+    UVM_SEQ_LIB_USER = auto()
 
 #---------------
 # Group --NODOCS-- Phasing
@@ -484,13 +473,13 @@ typedef enum
 #                        starting with ~pre_reset~ and ending with
 #                        ~post_shutdown~.
 #
-typedef enum { UVM_PHASE_IMP,
-               UVM_PHASE_NODE,
-               UVM_PHASE_TERMINAL,
-               UVM_PHASE_SCHEDULE,
-               UVM_PHASE_DOMAIN,
-               UVM_PHASE_GLOBAL
-} uvm_phase_type;
+class uvm_phase_type(Enum):
+    UVM_PHASE_IMP = auto()
+    UVM_PHASE_NODE = auto()
+    UVM_PHASE_TERMINAL = auto()
+    UVM_PHASE_SCHEDULE = auto()
+    UVM_PHASE_DOMAIN = auto()
+    UVM_PHASE_GLOBAL = auto()
 
 
 # Enum --NODOCS-- uvm_phase_state
@@ -546,20 +535,18 @@ typedef enum { UVM_PHASE_IMP,
 #|                       |                      <-- jump_to                      |
 #|                       +-------------------------------------------- JUMPING< -+
 
-   typedef enum { UVM_PHASE_UNINITIALIZED = 0,
-                  UVM_PHASE_DORMANT      = 1,
-                  UVM_PHASE_SCHEDULED    = 2,
-                  UVM_PHASE_SYNCING      = 4,
-                  UVM_PHASE_STARTED      = 8,
-                  UVM_PHASE_EXECUTING    = 16,
-                  UVM_PHASE_READY_TO_END = 32,
-                  UVM_PHASE_ENDED        = 64,
-                  UVM_PHASE_CLEANUP      = 128,
-                  UVM_PHASE_DONE         = 256,
-                  UVM_PHASE_JUMPING      = 512
-                  } uvm_phase_state;
-
-
+class uvm_phase_state(Enum):
+    UVM_PHASE_UNINITIALIZED = 0,
+    UVM_PHASE_DORMANT       = 1
+    UVM_PHASE_SCHEDULED     = 2
+    UVM_PHASE_SYNCING       = 4
+    UVM_PHASE_STARTED       = 8
+    UVM_PHASE_EXECUTING     = 16
+    UVM_PHASE_READY_TO_END  = 32
+    UVM_PHASE_ENDED         = 64
+    UVM_PHASE_CLEANUP       = 128
+    UVM_PHASE_DONE          = 256
+    UVM_PHASE_JUMPING       = 512
 
 # Enum --NODOCS-- uvm_wait_op
 #
@@ -572,13 +559,14 @@ typedef enum { UVM_PHASE_IMP,
 # UVM_GT  - greater than
 # UVM_GTE - greater than or equal to
 #
-typedef enum { UVM_LT,
-               UVM_LTE,
-               UVM_NE,
-               UVM_EQ,
-               UVM_GT,
-               UVM_GTE
-} uvm_wait_op;
+class uvm_wait_op(Enum):
+    UVM_LT = auto()
+    UVM_LTE = auto()
+    UVM_NE = auto()
+    UVM_EQ = auto()
+    UVM_GT = auto()
+    UVM_GTE = auto()
+
 
 
 #------------------
@@ -594,90 +582,14 @@ typedef enum { UVM_LT,
 # UVM_DROPPED     - an objection was raised
 # UVM_ALL_DROPPED - all objections have been dropped
 #
-typedef enum { UVM_RAISED      = 'h01, 
-               UVM_DROPPED     = 'h02,
-               UVM_ALL_DROPPED = 'h04
-} uvm_objection_event;
+class uvm_objection_event(Enum):
+    UVM_RAISED      = 0x01
+    UVM_DROPPED     = 0x02
+    UVM_ALL_DROPPED = 0x04
 
-`ifdef UVM_ENABLE_DEPRECATED_API
-
-#------------------------------
-# Group --NODOCS-- Default Policy Classes
-#------------------------------
-#
-# Policy classes copying, comparing, packing, unpacking, and recording
-# <uvm_object>-based objects.
-
-
-typedef class uvm_printer;
-typedef class uvm_table_printer;
-typedef class uvm_tree_printer;
-typedef class uvm_line_printer;
-typedef class uvm_comparer;
-typedef class uvm_packer;
-typedef class uvm_tr_database;
-typedef class uvm_text_tr_database;
-typedef class uvm_recorder;
-
-
-# Variable --NODOCS-- uvm_default_table_printer
-#
-# The table printer is a global object that can be used with
-# <uvm_object::do_print> to get tabular style printing.
-
-uvm_table_printer uvm_default_table_printer = new();
-
-
-# Variable --NODOCS-- uvm_default_tree_printer
-#
-# The tree printer is a global object that can be used with
-# <uvm_object::do_print> to get multi-line tree style printing.
-
-uvm_tree_printer uvm_default_tree_printer  = new();
-
-
-# Variable --NODOCS-- uvm_default_line_printer
-#
-# The line printer is a global object that can be used with
-# <uvm_object::do_print> to get single-line style printing.
-
-uvm_line_printer uvm_default_line_printer  = new();
-
-
-# Variable --NODOCS-- uvm_default_printer
-#
-# The default printer policy. Used when calls to <uvm_object::print>
-# or <uvm_object::sprint> do not specify a printer policy.
-#
-# The default printer may be set to any legal <uvm_printer> derived type,
-# including the global line, tree, and table printers described above.
-
-uvm_printer uvm_default_printer = uvm_default_table_printer;
-
-
-# Variable --NODOCS-- uvm_default_packer
-#
-# The default packer policy. Used when calls to <uvm_object::pack>
-# and <uvm_object::unpack> do not specify a packer policy.
-
-uvm_packer uvm_default_packer = new();
-
-
-# Variable --NODOCS-- uvm_default_comparer
-#
-#
-# The default compare policy. Used when calls to <uvm_object::compare>
-# do not specify a comparer policy.
-
-uvm_comparer uvm_default_comparer = new(); # uvm_comparer::init();
-
-`endif #UVM_ENABLE_DEPRECATED_API
-
-typedef int UVM_FILE;
-
-parameter UVM_FILE UVM_STDIN  = 32'h8000_0000;
-parameter UVM_FILE UVM_STDOUT = 32'h8000_0001;
-parameter UVM_FILE UVM_STDERR = 32'h8000_0002;
+UVM_STDIN  = sys.stdin
+UVM_STDOUT = sys.stdout
+UVM_STDERR = sys.stderr
 
 # Type: uvm_core_state
 # Implementation of the uvm_core_state enumeration, as defined
@@ -705,19 +617,19 @@ parameter UVM_FILE UVM_STDERR = 32'h8000_0002;
 
 # @uvm-ieee 1800.2-2017 manual F.2.10  
 class uvm_core_state(Enum):
-    UVM_CORE_UNINITIALIZED = auto()
-    UVM_CORE_PRE_INIT = auto()
-    UVM_CORE_INITIALIZING = auto()
-    UVM_CORE_INITIALIZED = auto() # UVM_CORE_POST_INIT
-    UVM_CORE_PRE_RUN = auto()
-    UVM_CORE_RUNNING = auto()
-    UVM_CORE_POST_RUN = auto()
-    UVM_CORE_FINISHED = auto()
-    UVM_CORE_PRE_ABORT = auto()
-    UVM_CORE_ABORTED = auto()
+    UNINITIALIZED = auto()
+    PRE_INIT = auto()
+    INITIALIZING = auto()
+    INITIALIZED = auto() # UVM_CORE_POST_INIT
+    PRE_RUN = auto()
+    RUNNING = auto()
+    POST_RUN = auto()
+    FINISHED = auto()
+    PRE_ABORT = auto()
+    ABORTED = auto()
 
-core_state m_uvm_core_state = UVM_CORE_UNINITIALIZED;
-parameter uvm_core_state UVM_CORE_POST_INIT = UVM_CORE_INITIALIZED;
+m_uvm_core_state = uvm_core_state.UNINITIALIZED
+UVM_CORE_POST_INIT = uvm_core_state.INITIALIZED
 
-typedef class uvm_object_wrapper;
-uvm_object_wrapper uvm_deferred_init[$];
+uvm_deferred_init = []
+
