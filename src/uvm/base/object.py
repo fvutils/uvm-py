@@ -266,7 +266,9 @@ class uvm_object(uvm_void):
     #|    endfunction 
 
     def create(self, name=""):
-        return None
+        t = type(self)
+        print("t=" + str(t))
+        return t(name)
 
   
     # Function -- NODOCS -- clone

@@ -28,6 +28,7 @@ from uvm.base.coreservice import uvm_coreservice_t, uvm_default_coreservice_t
 from uvm.base.object_globals import UVM_INFO, UVM_ERROR, UVM_LOW, UVM_FATAL,\
     UVM_NONE, UVM_MEDIUM, m_uvm_core_state, uvm_core_state, uvm_deferred_init
 import re
+import cocotb
 
 
 # Title -- NODOCS -- Globals
@@ -41,11 +42,13 @@ import re
 # Convenience function for uvm_top.run_test(). See <uvm_root> for more
 # information.
 # @uvm-ieee 1800.2-2017 auto F.3.1.2
+
+@cocotb.coroutine
 def run_test (test_name=""):
-    print("run_test")
+    print("globals.run_test")
     cs = uvm_coreservice_t.get()
     top = cs.get_root()
-    top.run_test(test_name)
+    yield top.run_test(test_name)
 
 #----------------------------------------------------------------------------
 #

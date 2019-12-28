@@ -34,7 +34,7 @@ from cocotb.utils import get_sim_time
 from uvm.base.component import uvm_component
 from uvm.base.coreservice import uvm_coreservice_t
 from uvm.base.factory import uvm_factory
-from uvm.base.globals import uvm_report_fatal
+from uvm.base.globals import uvm_report_fatal, uvm_report_warning
 from uvm.base.object_globals import m_uvm_core_state, uvm_core_state, UVM_NONE, \
     UVM_LOW
 from uvm.base.objection import uvm_objection
@@ -148,6 +148,8 @@ class uvm_root(uvm_component):
     @cocotb.coroutine
     def run_test(self, test_name=""):
         global m_uvm_core_state
+        
+        print("uvm_root.run_test")
 
         test_names = []
 
@@ -186,13 +188,13 @@ class uvm_root(uvm_component):
                 if i != 0:
                     test_list += ", "
                 test_list += test_names[i]
-            self.uvm_report_warning("MULTTST",
+            uvm_report_warning("MULTTST",
                 sformatf("Multiple (%0d) +UVM_TESTNAME arguments provided on the command line.  '%s' will be used.  Provided list: %s.", test_name_count, test_name, test_list), UVM_NONE)
 
         # if test now defined, create it using common factory
         if test_name != "":
             if "uvm_test_top" in self.m_children.keys():
-                self.uvm_report_fatal("TTINST",
+                uvm_report_fatal("TTINST",
                     "An uvm_test_top already exists via a previous call to run_test", UVM_NONE)
 #                #0; # forces shutdown because $finish is forked
                 yield Timer(0)
@@ -204,7 +206,7 @@ class uvm_root(uvm_component):
                 msg = "command line +UVM_TESTNAME=" + test_name
             else:
                 msg = "call to run_test(" + test_name + ")"
-            self.uvm_report_fatal("INVTST",
+            uvm_report_fatal("INVTST",
                 "Requested test from "+msg+ " not found.", UVM_NONE);
 
         if len(self.m_children) == 0:
@@ -217,15 +219,17 @@ class uvm_root(uvm_component):
             return
 
         if test_name=="":
-            self.uvm_report_info("RNTST", "Running test ...", UVM_LOW)
+            uvm_report_info("RNTST", "Running test ...", UVM_LOW)
         elif test_name == uvm_test_top.get_type_name():
-            self.uvm_report_info("RNTST", "Running test "+test_name+"...", UVM_LOW)
+            uvm_report_info("RNTST", "Running test "+test_name+"...", UVM_LOW)
         else:
-            self.uvm_report_info("RNTST", "Running test "+uvm_test_top.get_type_name()+" (via factory override for test \""+test_name+"\")...", UVM_LOW)
+            uvm_report_info("RNTST", "Running test "+uvm_test_top.get_type_name()+" (via factory override for test \""+test_name+"\")...", UVM_LOW)
 
         # store thread forked below for final cleanup
         # phase runner, isolated from calling process
+        print("--> fork()")
         phase_runner_proc = fork(uvm_phase.m_run_phases())
+        print("<-- fork()")
         
         #0; # let the phase runner start
         yield Timer(0)
@@ -336,13 +340,13 @@ class uvm_root(uvm_component):
 
         if len(comp_list) > 1:
             # TODO: Error handling
-#             self.uvm_report_warning("MMATCH",
+#             uvm_report_warning("MMATCH",
 #                 $sformatf("Found %0d components matching '%s'. Returning first match, %0s.",
 #                 comp_list.size(),comp_match,comp_list[0].get_full_name()), UVM_NONE)
             pass
 
         if len(comp_list) == 0:
-            self.uvm_report_warning("CMPNFD",
+            uvm_report_warning("CMPNFD",
                 "Component matching '"+comp_match+
                 "' was not found in the list of uvm_components", UVM_NONE)
             return None
@@ -374,7 +378,7 @@ class uvm_root(uvm_component):
 
     def print_topology(self, printer=None):
         if len(self.m_children) == 0:
-            self.uvm_report_warning("EMTCOMP", 
+            uvm_report_warning("EMTCOMP", 
                 "print_topology - No UVM components to print.", UVM_NONE)
             return
 
@@ -489,7 +493,7 @@ class uvm_root(uvm_component):
         if self.clp.get_arg_matches("+UVM_DUMP_CMDLINE_ARGS", dump_args):
             self.clp.get_args(all_args)
             for i,arg in enumerate(all_args):
-                self.uvm_report_info("DUMPARGS", sformatf("idx=%0d arg=[%s]",i,arg), UVM_NONE)
+                uvm_report_info("DUMPARGS", sformatf("idx=%0d arg=[%s]",i,arg), UVM_NONE)
 
     # TODO:
 #     extern local function void m_process_config(string cfg, bit is_int);
@@ -540,7 +544,7 @@ class uvm_root(uvm_component):
             print("TODO: uvm_report_server")                
 #             srvr = uvm_report_server.get_server()
 #             if srvr.get_severity_count(UVM_ERROR) > 0:
-#                 self.uvm_report_fatal("BUILDERR", "stopping due to build errors", UVM_NONE)
+#                 uvm_report_fatal("BUILDERR", "stopping due to build errors", UVM_NONE)
 
     # m_uvm_get_root
     # internal function not to be used
