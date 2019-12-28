@@ -219,44 +219,43 @@ class uvm_cmdline_processor (uvm_report_object):
 #       end
 #     end
 #   endfunction
-# 
-#     # Function -- NODOCS -- get_arg_values
-#     #
-#     # This function finds all the arguments which matches the ~match~ arg and
-#     # returns the suffix of the arguments in a list of values. The return
-#     # value is the number of matches that were found (it is the same as
-#     # values.size() ).
-#     # For example if '+foo=1,yes,on +foo=5,no,off' was provided on the command
-#     # line and the following code was executed:
-#     #
-#     #| string foo_values[$]
-#     #| initial begin
-#     #|    void'(uvm_cmdline_proc.get_arg_values("+foo=",foo_values));
-#     #|
-#     #
-#     # The foo_values queue would contain two entries.  These entries are shown
-#     # here:
-#     #
-#     #   0 - "1,yes,on"
-#     #   1 - "5,no,off"
-#     #
-#     # Splitting the resultant string is left to user but using the
-#     # uvm_split_string() function is recommended.
-# 
-#     # @uvm-ieee 1800.2-2017 auto G.1.4.2
-#   function int get_arg_values (string match, ref string values[$]);
-#     int chars = match.len();
-# 
-#     values.clear();
-#     foreach (m_argv[i]) begin
-#       if(m_argv[i].len() >= chars) begin
-#         if(m_argv[i].substr(0,chars-1) == match)
-#           values.append(m_argv[i].substr(chars,m_argv[i].len()-1));
-#       end
-#     end
-#     return values.size();
-#   endfunction
-# 
+ 
+  # Function -- NODOCS -- get_arg_values
+  #
+  # This function finds all the arguments which matches the ~match~ arg and
+  # returns the suffix of the arguments in a list of values. The return
+  # value is the number of matches that were found (it is the same as
+  # values.size() ).
+  # For example if '+foo=1,yes,on +foo=5,no,off' was provided on the command
+  # line and the following code was executed:
+  #
+  #| string foo_values[$]
+  #| initial begin
+  #|    void'(uvm_cmdline_proc.get_arg_values("+foo=",foo_values));
+  #|
+  #
+  # The foo_values queue would contain two entries.  These entries are shown
+  # here:
+  #
+  #   0 - "1,yes,on"
+  #   1 - "5,no,off"
+  #
+  # Splitting the resultant string is left to user but using the
+  # uvm_split_string() function is recommended.
+ 
+  # @uvm-ieee 1800.2-2017 auto G.1.4.2
+    def get_arg_values (self, match, values):
+        chars = len(match)
+ 
+        values.clear()
+        for arg in self.m_argv:
+            if len(arg) >= chars:
+                if arg[0:chars] == match:
+                    values.append(arg[chars:])
+                    
+        return len(values)
+    
+ 
 #     # Group -- NODOCS -- Tool information
 # 
 #     # Function -- NODOCS -- get_tool_name
@@ -279,13 +278,13 @@ class uvm_cmdline_processor (uvm_report_object):
 # 
 #     # constructor
 # 
-#     def __init__(self, name = ""):
-#         super().__init__(name)
-#       
-#         self.m_argv = [] 
-#         self.m_plus_argv = []
-#         self.m_uvm_argv = []
-#       
+    def __init__(self, name = ""):
+        super().__init__(name)
+       
+        self.m_argv = [] 
+        self.m_plus_argv = []
+        self.m_uvm_argv = []
+# TODO:       
 #     string s;
 #     string sub;
 #     int doInit=1;

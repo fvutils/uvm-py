@@ -41,7 +41,10 @@
 #------------------------------------------------------------------------------
 
 # @uvm-ieee 1800.2-2017 auto 8.3.2.1
-virtual class uvm_object_wrapper;
+class uvm_object_wrapper():
+    
+    def __init__(self, T):
+        self.T = T
 
     # Function -- NODOCS -- create_object
     #
@@ -50,10 +53,11 @@ virtual class uvm_object_wrapper;
     # method to create an object of a specific type, T.
 
     # @uvm-ieee 1800.2-2017 auto 8.3.2.2.1
-  virtual function uvm_object create_object (string name="");
-    return null;
-  endfunction
-
+    def create_object(self, name=""):
+        if name == "":
+            return self.T()
+        else:
+            return self.T(name)
 
     # Function -- NODOCS -- create_component
     #
@@ -62,10 +66,8 @@ virtual class uvm_object_wrapper;
     # implements this method to create a component of a specific type, T.
 
     # @uvm-ieee 1800.2-2017 auto 8.3.2.2.2
-  virtual function uvm_component create_component (string name, 
-                                                   uvm_component parent); 
-    return null;
-  endfunction
+    def create_component(self, name, parent):
+        return self.T(name, parent)
 
 
     # Function -- NODOCS -- get_type_name
@@ -75,7 +77,8 @@ virtual class uvm_object_wrapper;
     # name when matching against the requested type in name-based lookups.
 
     # @uvm-ieee 1800.2-2017 auto 8.3.2.2.3
-  pure virtual function string get_type_name();
+    def get_type_name(self):
+        return self.T.__name__
 
-  virtual function void initialize(); endfunction
-endclass
+    def initialize(self):
+        pass

@@ -28,19 +28,20 @@
 #------------------------------------------------------------------------------
 from cocotb import fork
 import cocotb
-from cocotb.result import TestComplete
+from cocotb.result import TestComplete, TestError
 from cocotb.triggers import Timer
 from cocotb.utils import get_sim_time
 from uvm.base.component import uvm_component
 from uvm.base.coreservice import uvm_coreservice_t
 from uvm.base.factory import uvm_factory
-from uvm.base.globals import uvm_report_fatal, uvm_report_warning
+from uvm.base.globals import uvm_report_fatal, uvm_report_warning,\
+    uvm_report_info
 from uvm.base.object_globals import m_uvm_core_state, uvm_core_state, UVM_NONE, \
     UVM_LOW
 from uvm.base.objection import uvm_objection
 from uvm.base.phase import uvm_phase
 from uvm.base.run_test_callback import uvm_run_test_callback
-from uvm.util.format import sformatf
+from uvm.util.format import sformatf, strcat
 from uvm.base.cmdline_processor import uvm_cmdline_processor
 import sys
 
@@ -149,7 +150,7 @@ class uvm_root(uvm_component):
     def run_test(self, test_name=""):
         global m_uvm_core_state
         
-        print("uvm_root.run_test")
+        print("uvm_root.run_test: test_name=" + test_name)
 
         test_names = []
 
@@ -166,15 +167,22 @@ class uvm_root(uvm_component):
         # drain-time and propagation of the drop up the hierarchy.
         # Needs to be done in run_test since it needs to be in an
         # initial block to fork a process.
-        yield uvm_objection.m_init_objections()
+        print("TODO: yield m_init_objections")
+#        yield uvm_objection.m_init_objections()
+        
+        print("post-m_init_objections")
 
         # dump cmdline args BEFORE the args are being used
-        self.m_do_dump_args()
+        # TODO:
+        # self.m_do_dump_args()
+        
+        print("post-dump: clp=" + str(self.clp))
 
         # Retrieve the test names provided on the command line.  Command line
         # overrides the argument.
         test_name_count = self.clp.get_arg_values("+UVM_TESTNAME=", test_names)
 
+        print("post-clp: " + str(test_name_count))
         # If at least one, use first in queue.
         if test_name_count > 0:
             test_name = test_names[0]
@@ -196,10 +204,10 @@ class uvm_root(uvm_component):
             if "uvm_test_top" in self.m_children.keys():
                 uvm_report_fatal("TTINST",
                     "An uvm_test_top already exists via a previous call to run_test", UVM_NONE)
-#                #0; # forces shutdown because $finish is forked
-                yield Timer(0)
+                raise TestError("An uvm_test_top already exists via a previous call to run_test")
             
         uvm_test_top = factory.create_component_by_name(test_name, "", "uvm_test_top", None)
+        print("uvm_test_top=" + str(uvm_test_top))
 
         if uvm_test_top is None:
             if testname_plusarg:
@@ -207,7 +215,7 @@ class uvm_root(uvm_component):
             else:
                 msg = "call to run_test(" + test_name + ")"
             uvm_report_fatal("INVTST",
-                "Requested test from "+msg+ " not found.", UVM_NONE);
+                strcat("Requested test from ",msg, " not found."), UVM_NONE)
 
         if len(self.m_children) == 0:
             uvm_report_fatal("NOCOMP",

@@ -179,8 +179,9 @@ def uvm_report_fatal(id,
                     report_enabled_checked = False):
     cs = uvm_coreservice_t.get()
     top = cs.get_root()
-    top.uvm_report_fatal(id, message, verbosity, filename, line, context_name,
-                    report_enabled_checked)
+    print("TODO: uvm_report_fatal: " + message)
+#    top.uvm_report_fatal(id, message, verbosity, filename, line, context_name,
+#                    report_enabled_checked)
     
 # 
 # 

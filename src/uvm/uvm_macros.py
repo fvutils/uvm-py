@@ -5,6 +5,7 @@ Created on Oct 7, 2019
 '''
 from uvm.base.component_registry import uvm_component_registry
 from uvm.base.object_registry import uvm_object_registry
+from uvm.base.object_wrapper import uvm_object_wrapper
 
 def uvm_component_utils(T):
     '''
@@ -20,7 +21,10 @@ def uvm_component_utils(T):
     T.type_id = uvm_component_registry(T)
     T.get_type = uvm_component_get_type
     T.get_object_type = uvm_component_get_object_type
-    # TODO: virtual create() method 
+    
+    from uvm.base.coreservice import uvm_coreservice_t
+    cs = uvm_coreservice_t.get()
+    cs.get_factory().register(uvm_object_wrapper(T))
     
     return T 
 
