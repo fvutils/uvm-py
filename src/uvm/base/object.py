@@ -64,16 +64,18 @@ class uvm_object(uvm_void):
 
     # @uvm-ieee 1800.2-2017 auto 5.3.3.1
     @staticmethod
-    def get_uvm_seeding(self):
-        cs = uvm_core_service_t.get()
+    def get_uvm_seeding():
+        from uvm.base.coreservice import uvm_coreservice_t
+        cs = uvm_coreservice_t.get()
         return cs.get_uvm_seeding()
       
     # Function -- NODOCS -- set_uvm_seeding
 
     # @uvm-ieee 1800.2-2017 auto 5.3.3.2
     @staticmethod
-    def set_uvm_seeding(self, enable):
-        cs = uvm_core_service_t.get()
+    def set_uvm_seeding(enable):
+        from uvm.base.coreservice import uvm_coreservice_t
+        cs = uvm_coreservice_t.get()
         cs.set_uvm_seeding(enable)
         
     # Function -- NODOCS -- reseed
@@ -87,8 +89,12 @@ class uvm_object(uvm_void):
 
     # @uvm-ieee 1800.2-2017 auto 5.3.3.3
     def reseed(self):
-        if self.uvm_get_seeding():
-            self.srandom(uvm_create_random_seed(get_type_name(), get_full_name()))
+        print("TODO: need srandom")
+        if uvm_object.get_uvm_seeding():
+            print("TODO: set object seed")
+#             self.srandom(uvm_create_random_seed(
+#                     self.get_type_name(), 
+#                     self.get_full_name()))
 
 
     # Group -- NODOCS -- Identification

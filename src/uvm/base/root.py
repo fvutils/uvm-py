@@ -44,6 +44,7 @@ from uvm.base.run_test_callback import uvm_run_test_callback
 from uvm.util.format import sformatf, strcat
 from uvm.base.cmdline_processor import uvm_cmdline_processor
 import sys
+from uvm.base import phase
 
 
 #------------------------------------------------------------------------------
@@ -238,9 +239,8 @@ class uvm_root(uvm_component):
         print("--> fork()")
         phase_runner_proc = fork(uvm_phase.m_run_phases())
         print("<-- fork()")
-        
-        #0; # let the phase runner start
-        yield Timer(0)
+
+        # TODO: need to explicitly yield to start runner?        
     
         # TODO:
         print("TODO: wait for m_phase_all_done")

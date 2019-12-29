@@ -191,10 +191,12 @@ class uvm_component(uvm_report_object):
 #TODO:        if not uvm_config_db #(uvm_bitstream_t)::get(this, "", "recording_detail", recording_detail)):
 #           void'(uvm_config_db #(int)::get(this, "", "recording_detail", recording_detail));
 
-        self.m_rh.set_name(self.get_full_name());
-        self.set_report_verbosity_level(parent.get_report_verbosity_level());
+# TODO: m_rh
+#        self.m_rh.set_name(self.get_full_name());
+#        self.set_report_verbosity_level(parent.get_report_verbosity_level());
 
-        self.m_set_cl_msg_args();        
+# TODO: set_cl_msg_args
+#        self.m_set_cl_msg_args();        
 
 
     #----------------------------------------------------------------------------
@@ -1518,7 +1520,27 @@ class uvm_component(uvm_report_object):
 #   /*protected*/ uvm_component m_parent;
 #   protected     uvm_component m_children[string];
 #   protected     uvm_component m_children_by_handle[uvm_component];
-#   extern protected virtual function bit  m_add_child(uvm_component child);
+    def m_add_child(self, child):
+        if child.get_name() in self.m_children.keys() and self.m_children[child.get_name()] != child:
+            print("TODO: uvm_warning")
+#       `uvm_warning("BDCLD",
+#         $sformatf("A child with the name '%0s' (type=%0s) already exists.",
+#            child.get_name(), m_children[child.get_name()].get_type_name()))
+            return False
+
+        if child in self.m_children_by_handle.keys():
+            print("TODO: uvm_warning")
+#       `uvm_warning("BDCHLD",
+#         $sformatf("A child with the name '%0s' %0s %0s'",
+#                   child.get_name(),
+#                   "already exists in parent under name '",
+#                   m_children_by_handle[child].get_name()))
+            return False
+
+        self.m_children[child.get_name()] = child
+        self.m_children_by_handle[child] = child
+        return True
+  
     def m_set_full_name(self):
         print("TODO: m_set_full_name")
         pass

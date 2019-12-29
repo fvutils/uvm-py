@@ -112,33 +112,36 @@ class uvm_coreservice_t():
 # 
 # 
 # 
-#         # Function: get_uvm_seeding
-#         # Returns the current UVM seeding ~enable~ value, as set by
-#         # <set_uvm_seeding>.
-#         #
-#         # This pure virtual method provides access to the
-#         # <uvm_default_coreservice_t::get_uvm_seeding> method as described
-#         # by F.4.3.
-#         #
-#         # It was omitted from the P1800.2 LRM, and is being tracked
-#         # in Mantis 6417
-#         #
-#         # @uvm-contrib This API is being considered for potential contribution to 1800.2
-#         pure virtual function bit get_uvm_seeding();
-# 
-#         # Function: set_uvm_seeding
-#         # Sets the current UVM seeding ~enable~ value, as retrieved by
-#         # <get_uvm_seeding>.
-#         #
-#         # This pure virtual method provides access to the
-#         # <uvm_default_coreservice_t::set_uvm_seeding> method as described
-#         # by F.4.4.
-#         #
-#         # It was omitted from the P1800.2 LRM, and is being tracked
-#         # in Mantis 6417
-#         #
-#         # @uvm-contrib This API is being considered for potential contribution to 1800.2
-#         pure virtual function void set_uvm_seeding(bit enable);
+    # Function: get_uvm_seeding
+    # Returns the current UVM seeding ~enable~ value, as set by
+    # <set_uvm_seeding>.
+    #
+    # This pure virtual method provides access to the
+    # <uvm_default_coreservice_t::get_uvm_seeding> method as described
+    # by F.4.3.
+    #
+    # It was omitted from the P1800.2 LRM, and is being tracked
+    # in Mantis 6417
+    #
+    # @uvm-contrib This API is being considered for potential contribution to 1800.2
+    def get_uvm_seeding(self):
+        # Pure virtual
+        pass
+
+    # Function: set_uvm_seeding
+    # Sets the current UVM seeding ~enable~ value, as retrieved by
+    # <get_uvm_seeding>.
+    #
+    # This pure virtual method provides access to the
+    # <uvm_default_coreservice_t::set_uvm_seeding> method as described
+    # by F.4.4.
+    #
+    # It was omitted from the P1800.2 LRM, and is being tracked
+    # in Mantis 6417
+    #
+    # @uvm-contrib This API is being considered for potential contribution to 1800.2
+    def set_uvm_seeding(self, enable):
+        pass
 #    
 #     # @uvm-ieee 1800.2-2017 auto F.4.1.4.21
 #     pure virtual function void set_resource_pool (uvm_resource_pool pool);
@@ -179,6 +182,7 @@ class uvm_default_coreservice_t(uvm_coreservice_t):
     def __init__(self):
         super().__init__()
         self.factory = None
+        self.m_use_uvm_seeding = True
 
     # Function --NODOCS-- get_factory
     #
@@ -356,19 +360,16 @@ class uvm_default_coreservice_t(uvm_coreservice_t):
 # 
 # `ifndef UVM_ENABLE_DEPRECATED_API
 #    # This bit is located in uvm_object in deprecated mode
-#    local bit m_use_uvm_seeding = 1;
 # `endif
-#    
-#    # @uvm-ieee 1800.2-2017 auto F.4.3
-#    virtual function bit get_uvm_seeding();
-#       return m_use_uvm_seeding;
-#    endfunction : get_uvm_seeding
-# 
-#    # @uvm-ieee 1800.2-2017 auto F.4.4
-#    virtual function void set_uvm_seeding(bit enable);
-#       m_use_uvm_seeding = enable;
-#    endfunction : set_uvm_seeding
-# 
+    
+    # @uvm-ieee 1800.2-2017 auto F.4.3
+    def  get_uvm_seeding(self):
+        return self.m_use_uvm_seeding
+ 
+    # @uvm-ieee 1800.2-2017 auto F.4.4
+    def set_uvm_seeding(self, enable):
+        self.m_use_uvm_seeding = enable
+ 
 #     local uvm_copier m_copier ;
 # 
 #     virtual function void set_default_copier(uvm_copier copier);

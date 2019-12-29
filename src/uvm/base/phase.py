@@ -25,8 +25,11 @@
 #   permissions and limitations under the License.
 #----------------------------------------------------------------------
 from uvm.base.object import uvm_object
-from uvm.base.object_globals import uvm_phase_type
+from uvm.base.object_globals import uvm_phase_type, uvm_core_state,\
+    m_uvm_core_state
 import cocotb
+from cocotb.triggers import Timer
+from uvm.util.mailbox import Mailbox
 
 #------------------------------------------------------------------------------
 #
@@ -207,14 +210,16 @@ class uvm_phase(uvm_object):
 # 
 # 
 #     # @uvm-ieee 1800.2-2017 auto 9.3.1.5.1
-#   virtual function void exec_func(uvm_component comp, uvm_phase phase); endfunction
+    def exec_func(self, comp, phase):
+        # Nop
+        pass
 # 
 # 
 # 
-#     # @uvm-ieee 1800.2-2017 auto 9.3.1.5.2
-#   virtual task exec_task(uvm_component comp, uvm_phase phase); endtask
-# 
-# 
+    # @uvm-ieee 1800.2-2017 auto 9.3.1.5.2
+    @cocotb.coroutine
+    def exec_task(self, comp, phase):
+        pass
 # 
 #     #----------------
 #     # Group -- NODOCS -- Schedule
@@ -222,13 +227,251 @@ class uvm_phase(uvm_object):
 # 
 # 
 #     # @uvm-ieee 1800.2-2017 auto 9.3.1.6.1
-#   extern function void add(uvm_phase phase,
-#                            uvm_phase with_phase=None,
-#                            uvm_phase after_phase=None,
-#                            uvm_phase before_phase=None,
-#                            uvm_phase start_with_phase=None,
-#                            uvm_phase end_with_phase=None
-#                         );
+    def add(self, phase, 
+            with_phase=None, 
+            after_phase=None, 
+            before_phase=None,
+            start_with_phase=None,
+            end_with_phase=None):
+        print("TODO: uvm_phase.add()")
+#   uvm_phase new_node, begin_node, end_node, tmp_node;
+#   uvm_phase_state_change state_chg;
+# 
+#   if (phase  is None)
+#       `uvm_fatal("PH/NULL", "add: phase argument is null")
+# 
+#   if (with_phase != null  and  with_phase.get_phase_type() == UVM_PHASE_IMP) begin
+#     string nm = with_phase.get_name();
+#     with_phase = find(with_phase);
+#     if (with_phase  is None)
+#       `uvm_fatal("PH_BAD_ADD",
+#          {"cannot find with_phase '",nm,"' within node '",get_name(),"'"})
+#   end
+# 
+#   if (before_phase != null  and  before_phase.get_phase_type() == UVM_PHASE_IMP) begin
+#     string nm = before_phase.get_name();
+#     before_phase = find(before_phase);
+#     if (before_phase  is None)
+#       `uvm_fatal("PH_BAD_ADD",
+#          {"cannot find before_phase '",nm,"' within node '",get_name(),"'"})
+#   end
+# 
+#   if (after_phase != null  and  after_phase.get_phase_type() == UVM_PHASE_IMP) begin
+#     string nm = after_phase.get_name();
+#     after_phase = find(after_phase);
+#     if (after_phase  is None)
+#       `uvm_fatal("PH_BAD_ADD",
+#          {"cannot find after_phase '",nm,"' within node '",get_name(),"'"})
+#   end
+# 
+#   if (start_with_phase != null  and  start_with_phase.get_phase_type() == UVM_PHASE_IMP) begin
+#     string nm = start_with_phase.get_name();
+#     start_with_phase = find(start_with_phase);
+#     if (start_with_phase  is None)
+#       `uvm_fatal("PH_BAD_ADD",
+#          {"cannot find start_with_phase '",nm,"' within node '",get_name(),"'"})
+#   end
+# 
+#   if (end_with_phase != null  and  end_with_phase.get_phase_type() == UVM_PHASE_IMP) begin
+#      string nm = end_with_phase.get_name();
+#      end_with_phase = find(end_with_phase);
+#      if (end_with_phase  is None)
+#       `uvm_fatal("PH_BAD_ADD",
+#          {"cannot find end_with_phase '",nm,"' within node '",get_name(),"'"})
+#   end
+# 
+#   if (((with_phase != null) + (after_phase != null) + (start_with_phase != null)) > 1)
+#     `uvm_fatal("PH_BAD_ADD",
+#        "only one of with_phase/after_phase/start_with_phase may be specified as they all specify predecessor")
+# 
+#   if (((with_phase != null) + (before_phase != null) + (end_with_phase != null)) > 1)
+#     `uvm_fatal("PH_BAD_ADD",
+#        "only one of with_phase/before_phase/end_with_phase may be specified as they all specify successor")
+# 
+#   if (before_phase == this  or  
+#      after_phase == m_end_node  or  
+#      with_phase == m_end_node  or 
+#      start_with_phase == m_end_node  or 
+#      end_with_phase == m_end_node) 
+#     `uvm_fatal("PH_BAD_ADD",
+#        "cannot add before begin node, after end node, or with end nodes")
+# 
+#   if (before_phase != null  and  after_phase != null) begin
+#     if (!after_phaseis_before=before_phase) begin
+#       `uvm_fatal("PH_BAD_ADD",{"Phase '",before_phase.get_name(),
+#                  "' is not before phase '",after_phase.get_name(),"'"})
+#     end
+#   end
+# 
+#   if (before_phase != null  and  start_with_phase != null) begin
+#     if (!start_with_phaseis_before=before_phase) begin
+#       `uvm_fatal("PH_BAD_ADD",{"Phase '",before_phase.get_name(),
+#                  "' is not before phase '",start_with_phase.get_name(),"'"})
+#     end
+#   end
+# 
+#   if (end_with_phase != null  and  after_phase != null) begin
+#     if (!after_phaseis_before=end_with_phase) begin
+#        `uvm_fatal("PH_BAD_ADD",{"Phase '",end_with_phase.get_name(),
+#                  "' is not before phase '",after_phase.get_name(),"'"})
+#     end
+#   end
+# 
+#     # If we are inserting a new "leaf node"
+#   if (phase.get_phase_type() == UVM_PHASE_IMP) begin
+#     uvm_task_phase tp;
+#     new_node = new(phase.get_name(),UVM_PHASE_NODE,this);
+#     new_node.m_imp = phase;
+#     begin_node = new_node;
+#     end_node = new_node;
+# 
+#   end
+#     # We are inserting an existing schedule
+#   else begin
+#     begin_node = phase;
+#     end_node   = phase.m_end_node;
+#     phase.m_parent = this;
+#   end
+# 
+#     # If 'with_phase' is us, then insert node in parallel
+#   /*
+#   if (with_phase == this) begin
+#     after_phase = this;
+#     before_phase = m_end_node;
+#   end
+#   */
+# 
+#     # If no before/after/with specified, insert at end of this schedule
+#   if (with_phase is None  and  after_phase is None  and  before_phase is None  and  
+#      start_with_phase is None  and  end_with_phase is None) begin
+#     before_phase = m_end_node;
+#   end
+# 
+# 
+#   if (m_phase_trace) begin
+#     uvm_phase_type typ = phase.get_phase_type();
+#     `uvm_info("PH/TRC/ADD_PH",
+#       {get_name()," (",m_phase_type.name(),") ADD_PHASE: phase=",phase.get_full_name()," (",
+#       typ.name(),", inst_id=",$sformatf("%0d",phase.get_inst_id()),")",
+#       " with_phase=",   (with_phase  is None)   ? "null" : with_phase.get_name(), 
+#       " start_with_phase=",   (start_with_phase  is None)   ? "null" : start_with_phase.get_name(), 
+#       " end_with_phase=",   (end_with_phase  is None)   ? "null" : end_with_phase.get_name(), 
+#       " after_phase=",  (after_phase  is None)  ? "null" : after_phase.get_name(),
+#       " before_phase=", (before_phase  is None) ? "null" : before_phase.get_name(), 
+#       " new_node=",     (new_node  is None)     ? "null" : {new_node.get_name(),
+#                                                            " inst_id=",
+#                                                            $sformatf("%0d",new_node.get_inst_id())},
+#       " begin_node=",   (begin_node  is None)   ? "null" : begin_node.get_name(),
+#       " end_node=",     (end_node  is None)     ? "null" : end_node.get_name()},UVM_DEBUG)
+#   end
+# 
+# 
+#     # 
+#     # INSERT IN PARALLEL WITH 'WITH' PHASE
+#   if (with_phase != null) begin
+#     # all pre-existing predecessors to with_phase are predecessors to the new phase
+#     begin_node.m_predecessors = with_phase.m_predecessors;
+#     foreach (with_phase.m_predecessors[pred]) pred.m_successors[begin_node] = 1;
+#     # all pre-existing successors to with_phase are successors to this phase
+#     end_node.m_successors = with_phase.m_successors;
+#     foreach (with_phase.m_successors[succ]) succ.m_predecessors[end_node] = 1;
+#   end
+#   
+#   if (start_with_phase != null) begin
+#     # all pre-existing predecessors to start_with_phase are predecessors to the new phase
+#     begin_node.m_predecessors = start_with_phase.m_predecessors;
+#     foreach (start_with_phase.m_predecessors[pred]) begin
+#       pred.m_successors[begin_node] = 1;
+#     end
+#     # if not otherwise specified, successors for the new phase are the successors to the end of this schedule
+#     if (before_phase  is None  and  end_with_phase  is None) begin
+#       end_node.m_successors = m_end_node.m_successors ;
+#       foreach (m_end_node.m_successors[succ]) begin
+#         succ.m_predecessors[end_node] = 1;
+#       end
+#     end
+#   end
+#   
+#   if (end_with_phase != null) begin
+#      # all pre-existing successors to end_with_phase are successors to the new phase
+#     end_node.m_successors = end_with_phase.m_successors;
+#     foreach (end_with_phase.m_successors[succ]) begin
+#       succ.m_predecessors[end_node] = 1;
+#     end
+#     # if not otherwise specified, predecessors for the new phase are the predecessors to the start of this schedule
+#     if (after_phase  is None  and  start_with_phase  is None) begin
+#       begin_node.m_predecessors = this.m_predecessors ;
+#       foreach (this.m_predecessors[pred]) begin
+#         pred.m_successors[begin_node] = 1;
+#       end
+#     end
+#   end
+# 
+#     # INSERT BEFORE PHASE
+#   if (before_phase != null) begin
+#     # unless predecessors to this phase are otherwise specified, 
+#     # pre-existing predecessors to before_phase move to be predecessors to the new phase
+#     if (after_phase  is None  and  start_with_phase  is None) begin
+#       foreach (before_phase.m_predecessors[pred]) begin
+#         pred.m_successorsdelete=before_phase;
+#         pred.m_successors[begin_node] = 1;
+#       end
+#       begin_node.m_predecessors = before_phase.m_predecessors;
+#       before_phase.m_predecessors.clear();
+#     end
+#     # there is a special case if before and after used to be adjacent;
+#     # the new phase goes in-between them
+#     elif: (before_phase.m_predecessorsexists=after_phase) begin
+#       before_phase.m_predecessorsdelete=after_phase;
+#     end
+# 
+#     # before_phase is now the sole successor of this phase
+#     before_phase.m_predecessors[end_node] = 1;
+#     end_node.m_successors.clear() ;
+#     end_node.m_successors[before_phase] = 1;
+# 
+#   end
+# 
+# 
+#     # INSERT AFTER PHASE
+#   if (after_phase != null) begin
+#     # unless successors to this phase are otherwise specified, 
+#     # pre-existing successors to after_phase are now successors to this phase
+#     if (before_phase  is None  and  end_with_phase  is None) begin
+#       foreach (after_phase.m_successors[succ]) begin
+#        succ.m_predecessorsdelete=after_phase;
+#        succ.m_predecessors[end_node] = 1;
+#       end
+#       end_node.m_successors = after_phase.m_successors;
+#       after_phase.m_successors.clear();
+#     end
+#     # there is a special case if before and after used to be adjacent;
+#     # the new phase goes in-between them
+#     elif: (after_phase.m_successorsexists=before_phase) begin
+#       after_phase.m_successorsdelete=before_phase;
+#     end
+# 
+#     # after_phase is the sole predecessor of this phase 
+#     after_phase.m_successors[begin_node] = 1;
+#     begin_node.m_predecessors.clear();
+#     begin_node.m_predecessors[after_phase] = 1;
+#   end
+#   
+# 
+# 
+#     # Transition nodes to DORMANT state
+#   if (new_node  is None)
+#     tmp_node = phase;
+#   else
+#     tmp_node = new_node;
+# 
+#   state_chg = uvm_phase_state_change::type_id::create(tmp_node.get_name());
+#   state_chg.m_phase = tmp_node;
+#   state_chg.m_jump_to = null;
+#   state_chg.m_prev_state = tmp_node.m_state;
+#   tmp_node.m_state = UVM_PHASE_DORMANT;
+#   `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(tmp_node, state_chg)) 
+# endfunction        
 # 
 # 
 # 
@@ -504,13 +747,37 @@ class uvm_phase(uvm_object):
 # 
 #     # Implementation - Overall Control
 #     #---------------------------------
-#   local static mailbox #(uvm_phase) m_phase_hopper = new();
-# 
+    m_phase_hopper = Mailbox()
+    
     @staticmethod
     @cocotb.coroutine
     def m_run_phases():
+        global m_uvm_core_state
         print("TODO: uvm_phase.m_run_phases()")
-        pass
+        # This task contains the top-level process that owns all the phase
+        # processes.  By hosting the phase processes here we avoid problems
+        # associated with phase processes related as parents/children
+        from uvm.base.coreservice import uvm_coreservice_t
+        cs = uvm_coreservice_t.get()
+        top = cs.get_root()
+ 
+        # initiate by starting first phase in common domain
+        from uvm.base.domain import uvm_domain
+        uvm_phase.m_phase_hopper.try_put(uvm_domain.get_common_domain())
+
+        m_uvm_core_state=uvm_core_state.RUNNING
+#   forever begin
+#     uvm_phase phase;
+#     m_phase_hopper.get(phase);
+#     fork
+#       begin
+#         phase.execute_phase();
+#       end
+#     join_none
+#     #0;  # let the process start running
+#   end
+# endtask        
+        yield Timer(0)
     
 #   extern local task  execute_phase();
 #   extern local function void m_terminate_phase();

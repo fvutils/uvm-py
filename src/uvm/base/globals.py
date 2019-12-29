@@ -122,8 +122,9 @@ def uvm_report_info(id,
                 report_enabled_checked = False):
     cs = uvm_coreservice_t.get()
     top = cs.get_root()
-    top.uvm_report_info(id, message, verbosity, filename, line, context_name,
-            report_enabled_checked)
+    print("TODO: uvm_report_info: " + message)
+#    top.uvm_report_info(id, message, verbosity, filename, line, context_name,
+#            report_enabled_checked)
  
  
 # Function -- NODOCS -- uvm_report_warning
