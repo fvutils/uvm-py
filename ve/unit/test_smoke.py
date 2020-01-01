@@ -9,6 +9,8 @@ from cocotb import scheduler
 from cocotb.scheduler import _debug
 import logging
 import sys
+from cocotb.simulator_base import SimulatorBase
+from cocotb.info import Info
 
 try:
     import unittest
@@ -21,29 +23,22 @@ try:
 except:
     print("Execption: ")
     
-class my_sim():
+class my_sim(SimulatorBase):
     
     def __init__(self):
-        pass
+        super().__init__()
     
-    def register_timed_callback(self, sim_steps, callback, hndl):
-        # NOP
-        print("register_timed_callback: " + str(sim_steps))
-        
-    def deregister_callback(self, hndl):
-        # NOP
-        print("deregister_callback")
-    
-    
-
 class TestSmoke(TestCase):
     
     def setUp(self):
         global simulator
         global _debug
-        cocotb.triggers.simulator = my_sim()
-        _debug = True
-        
+   #     global cocotb.argv
+  
+        info = Info()
+   
+        self.core = cocotb.initialize_context(info, my_sim())
+
         h = logging.StreamHandler(sys.stdout)
         logger = logging.getLogger()
         logger.addHandler(h)

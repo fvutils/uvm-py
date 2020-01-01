@@ -332,7 +332,7 @@ class uvm_final_phase (uvm_topdown_phase):
     @staticmethod
     def get():
         if uvm_final_phase.m_inst is None:
-            m_inst = uvm_final_phase()
+            uvm_final_phase.m_inst = uvm_final_phase()
         return uvm_final_phase.m_inst
 
     def __init__(self, name="final"):

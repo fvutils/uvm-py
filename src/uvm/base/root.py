@@ -243,8 +243,9 @@ class uvm_root(uvm_component):
         # TODO: need to explicitly yield to start runner?        
     
         # TODO:
-        print("TODO: wait for m_phase_all_done")
-#        wait (m_phase_all_done == 1);
+        print("--> Wait on m_phase_all_done")
+        yield self.m_phase_all_done.wait()
+        print("<-- Wait on m_phase_all_done")
     
         m_uvm_core_state=uvm_core_state.POST_RUN
     
@@ -465,7 +466,10 @@ class uvm_root(uvm_component):
         # of the end_of_elaboration phase.
         self.enable_print_topology = False
         
-        self.m_phase_all_done = False
+        self.m_phase_all_done = cocotb.triggers.Event()
+        
+    def set_phase_all_done(self):
+        self.m_phase_all_done.set()
           
     def m_add_child (self, child):
         if super().m_add_child(child):

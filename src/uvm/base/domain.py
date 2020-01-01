@@ -27,6 +27,13 @@ from uvm.base.object_globals import uvm_phase_type
 from uvm.base.common_phases import uvm_build_phase, uvm_connect_phase,\
     uvm_end_of_elaboration_phase, uvm_start_of_simulation_phase, uvm_run_phase,\
     uvm_extract_phase, uvm_check_phase, uvm_report_phase, uvm_final_phase
+from uvm.base.runtime_phases import uvm_pre_reset_phase, uvm_reset_phase,\
+    uvm_post_reset_phase, uvm_pre_configure_phase, uvm_configure_phase,\
+    uvm_post_configure_phase, uvm_pre_main_phase, uvm_main_phase,\
+    uvm_post_main_phase, uvm_pre_shutdown_phase, uvm_shutdown_phase,\
+    uvm_post_shutdown_phase
+from uvm.uvm_macros import uvm_error
+from uvm.util.format import sformatf
 
 # uvm_phase build_ph;
 # uvm_phase connect_ph;
@@ -89,19 +96,19 @@ class uvm_domain (uvm_phase):
             return domain
 
         domain = uvm_domain("common")
-        domain.add(uvm_build_phase.get());
-        domain.add(uvm_connect_phase.get());
-        domain.add(uvm_end_of_elaboration_phase.get());
-        domain.add(uvm_start_of_simulation_phase.get());
-        domain.add(uvm_run_phase.get());
-        domain.add(uvm_extract_phase.get());
-        domain.add(uvm_check_phase.get());
-        domain.add(uvm_report_phase.get());
-        domain.add(uvm_final_phase.get());
+        domain.add(uvm_build_phase.get())
+        domain.add(uvm_connect_phase.get())
+        domain.add(uvm_end_of_elaboration_phase.get())
+        domain.add(uvm_start_of_simulation_phase.get())
+        domain.add(uvm_run_phase.get())
+        domain.add(uvm_extract_phase.get())
+        domain.add(uvm_check_phase.get())
+        domain.add(uvm_report_phase.get())
+        domain.add(uvm_final_phase.get())
 
         # for backward compatibility, make common phases visible;
         # same as uvm_<name>_phase::get().
-        print("TODO: construct and add phases")
+        print("TODO: back-compat -- retrieve phases")
 #         build_ph               = domain.find(uvm_build_phase::get());
 #         connect_ph             = domain.find(uvm_connect_phase::get());
 #         end_of_elaboration_ph  = domain.find(uvm_end_of_elaboration_phase::get());
@@ -123,20 +130,18 @@ class uvm_domain (uvm_phase):
     # @uvm-ieee 1800.2-2017 auto 9.4.2.3
     @staticmethod
     def add_uvm_phases(schedule):
-        # TODO: 
-        print("TODO: uvm_domain.add_uvm_phases")
-#         schedule.add(uvm_pre_reset_phase::get());
-#         schedule.add(uvm_reset_phase::get());
-#         schedule.add(uvm_post_reset_phase::get());
-#         schedule.add(uvm_pre_configure_phase::get());
-#         schedule.add(uvm_configure_phase::get());
-#         schedule.add(uvm_post_configure_phase::get());
-#         schedule.add(uvm_pre_main_phase::get());
-#         schedule.add(uvm_main_phase::get());
-#         schedule.add(uvm_post_main_phase::get());
-#         schedule.add(uvm_pre_shutdown_phase::get());
-#         schedule.add(uvm_shutdown_phase::get());
-#         schedule.add(uvm_post_shutdown_phase::get());
+        schedule.add(uvm_pre_reset_phase.get())
+        schedule.add(uvm_reset_phase.get())
+        schedule.add(uvm_post_reset_phase.get())
+        schedule.add(uvm_pre_configure_phase.get())
+        schedule.add(uvm_configure_phase.get())
+        schedule.add(uvm_post_configure_phase.get())
+        schedule.add(uvm_pre_main_phase.get())
+        schedule.add(uvm_main_phase.get())
+        schedule.add(uvm_post_main_phase.get())
+        schedule.add(uvm_pre_shutdown_phase.get())
+        schedule.add(uvm_shutdown_phase.get())
+        schedule.add(uvm_post_shutdown_phase.get())
 
 
     # Function -- NODOCS -- get_uvm_domain
@@ -156,9 +161,8 @@ class uvm_domain (uvm_phase):
     # @uvm-ieee 1800.2-2017 auto 9.4.2.1
     def __init__(self, name):
         super().__init__(name,uvm_phase_type.UVM_PHASE_DOMAIN)
-        print("TODO: error messaging")
-#         if name in uvm_domain.m_domains.keys():
-#             `uvm_error("UNIQDOMNAM", $sformatf("Domain created with non-unique name '%s'", name))
+        if name in uvm_domain.m_domains.keys():
+            uvm_error("UNIQDOMNAM", sformatf("Domain created with non-unique name '%s'", name))
         uvm_domain.m_domains[name] = self
 
     # @uvm-ieee 1800.2-2017 auto 9.4.2.4

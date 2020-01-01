@@ -26,10 +26,14 @@
 #----------------------------------------------------------------------
 from uvm.base.object import uvm_object
 from uvm.base.object_globals import uvm_phase_type, uvm_core_state,\
-    m_uvm_core_state
+    m_uvm_core_state, uvm_phase_state
 import cocotb
 from cocotb.triggers import Timer
 from uvm.util.mailbox import Mailbox
+from uvm.uvm_macros import uvm_fatal
+from uvm.util.format import strcat
+from uvm.base.phase_state_change import uvm_phase_state_change
+import uvm.base
 
 #------------------------------------------------------------------------------
 #
@@ -147,11 +151,48 @@ class uvm_phase(uvm_object):
     # @uvm-ieee 1800.2-2017 auto 9.3.1.3.1
     def __init__(self, name="uvm_phase", phase_type=uvm_phase_type.UVM_PHASE_SCHEDULE, parent=None):
         super().__init__(name)
-        pass
-
+        self.m_phase_type = phase_type
+       
+        if name == "common" and phase_type == uvm_phase_type.UVM_PHASE_DOMAIN:
+            self.m_state = uvm_phase_state.UVM_PHASE_DORMANT
+        else:
+            self.m_state = uvm_phase_state.UVM_PHASE_UNINITIALIZED
+        
+        self.m_predecessors = {} # map<uvm_phase,bit> TODO: set?
+        self.m_successors = {} # map<uvm_phase,bit> TODO: set?
+        self.m_end_node = None
+        
+        self.m_parent = parent     # our 'schedule' node [or points 'up' one level]
+        self.m_imp = None          # phase imp to call when we execute this node
+        
+        self.m_run_count = 0 # num times this phase has executed
+#   local process            m_phase_proc;
+#   local static int         m_default_max_ready_to_end_iters = 20;    # 20 is the initial value defined by 1800.2-2017 9.3.1.3.5
+#   int                      max_ready_to_end_iters = get_default_max_ready_to_end_iterations();
+        self.m_num_procs_not_yet_returned = 0
+        
+#   begin
+#     uvm_cmdline_processor clp = uvm_cmdline_processor::get_inst();
+#     string val;
+#     if (clp.get_arg_value("+UVM_PHASE_TRACE", val))
+#       m_phase_trace = 1;
+#     else
+#       m_phase_trace = 0;
+#     if (clp.get_arg_value("+UVM_USE_OVM_RUN_SEMANTIC", val))
+#       m_use_ovm_run_semantic = 1;
+#     else
+#       m_use_ovm_run_semantic = 0;
+#   end
+# 
+#    
+        if parent is None and phase_type in (uvm_phase_type.UVM_PHASE_SCHEDULE,uvm_phase_type.UVM_PHASE_DOMAIN):
+            self.m_end_node = uvm_phase(name + "_end", uvm_phase_type.UVM_PHASE_TERMINAL, self)
+            self.m_successors[self.m_end_node] = True
+            self.m_end_node.m_predecessors[self] = True
 
     # @uvm-ieee 1800.2-2017 auto 9.3.1.3.2
-#   extern function uvm_phase_type get_phase_type();
+    def get_phase_type(self):
+        return self.m_phase_type
 # 
 #     # @uvm-ieee 1800.2-2017 auto 9.3.1.3.3
 #   extern virtual function void set_max_ready_to_end_iterations(int max);
@@ -180,15 +221,14 @@ class uvm_phase(uvm_object):
 # 
 # 
 # 
-#     # @uvm-ieee 1800.2-2017 auto 9.3.1.4.3
-#   extern function uvm_phase find_by_name(string name, bit stay_in_scope=1);
-# 
-# 
-# 
-#     # @uvm-ieee 1800.2-2017 auto 9.3.1.4.4
-#   extern function uvm_phase find(uvm_phase phase, bit stay_in_scope=1);
-# 
-# 
+    # @uvm-ieee 1800.2-2017 auto 9.3.1.4.3
+    def find_by_name(self, name, stay_in_scope=True):
+        print("TODO: uvm_phase.find_by_name()")
+
+    # @uvm-ieee 1800.2-2017 auto 9.3.1.4.4
+    def find(self, phase, stay_in_scope=True):
+        print("TODO: uvm_phase.find()")
+
 # 
 #     # @uvm-ieee 1800.2-2017 auto 9.3.1.4.5
 #   extern function bit is(uvm_phase phase);
@@ -233,28 +273,30 @@ class uvm_phase(uvm_object):
             before_phase=None,
             start_with_phase=None,
             end_with_phase=None):
-        print("TODO: uvm_phase.add()")
+        print("TODO: uvm_phase.add() - " + str(phase) + " - " + str(phase.get_phase_type()))
 #   uvm_phase new_node, begin_node, end_node, tmp_node;
 #   uvm_phase_state_change state_chg;
 # 
-#   if (phase  is None)
-#       `uvm_fatal("PH/NULL", "add: phase argument is null")
-# 
-#   if (with_phase != null  and  with_phase.get_phase_type() == UVM_PHASE_IMP) begin
-#     string nm = with_phase.get_name();
-#     with_phase = find(with_phase);
-#     if (with_phase  is None)
-#       `uvm_fatal("PH_BAD_ADD",
-#          {"cannot find with_phase '",nm,"' within node '",get_name(),"'"})
-#   end
-# 
-#   if (before_phase != null  and  before_phase.get_phase_type() == UVM_PHASE_IMP) begin
-#     string nm = before_phase.get_name();
-#     before_phase = find(before_phase);
-#     if (before_phase  is None)
-#       `uvm_fatal("PH_BAD_ADD",
-#          {"cannot find before_phase '",nm,"' within node '",get_name(),"'"})
-#   end
+        new_node = None
+        begin_node = None
+        end_node = None
+        
+        if phase is None:
+            uvm_fatal("PH/NULL", "add: phase argument is null")
+ 
+        if with_phase is not None and with_phase.get_phase_type() == uvm_phase_type.UVM_PHASE_IMP:
+            nm = with_phase.get_name()
+            with_phase = self.find(with_phase)
+            if with_phase is None:
+                uvm_fatal("PH_BAD_ADD",
+                          strcat("cannot find with_phase '",nm,"' within node '",self.get_name(),"'"))
+ 
+        if before_phase is not None and before_phase.get_phase_type() == uvm_phase_type.UVM_PHASE_IMP:
+            nm = before_phase.get_name()
+            before_phase = self.find(before_phase)
+            if before_phase is None:
+                uvm_fatal("PH_BAD_ADD",
+                    strcat("cannot find before_phase '",nm,"' within node '",self.get_name(),"'"))
 # 
 #   if (after_phase != null  and  after_phase.get_phase_type() == UVM_PHASE_IMP) begin
 #     string nm = after_phase.get_name();
@@ -317,21 +359,17 @@ class uvm_phase(uvm_object):
 #     end
 #   end
 # 
-#     # If we are inserting a new "leaf node"
-#   if (phase.get_phase_type() == UVM_PHASE_IMP) begin
-#     uvm_task_phase tp;
-#     new_node = new(phase.get_name(),UVM_PHASE_NODE,this);
-#     new_node.m_imp = phase;
-#     begin_node = new_node;
-#     end_node = new_node;
-# 
-#   end
-#     # We are inserting an existing schedule
-#   else begin
-#     begin_node = phase;
-#     end_node   = phase.m_end_node;
-#     phase.m_parent = this;
-#   end
+        # If we are inserting a new "leaf node"
+        if phase.get_phase_type() == uvm_phase_type.UVM_PHASE_IMP:
+            new_node = uvm_phase(phase.get_name(),uvm_phase_type.UVM_PHASE_NODE,self)
+            new_node.m_imp = phase
+            begin_node = new_node
+            end_node = new_node
+        else:
+            # We are inserting an existing schedule
+            begin_node = phase
+            end_node   = phase.m_end_node
+            phase.m_parent = self
 # 
 #     # If 'with_phase' is us, then insert node in parallel
 #   /*
@@ -340,12 +378,10 @@ class uvm_phase(uvm_object):
 #     before_phase = m_end_node;
 #   end
 #   */
-# 
-#     # If no before/after/with specified, insert at end of this schedule
-#   if (with_phase is None  and  after_phase is None  and  before_phase is None  and  
-#      start_with_phase is None  and  end_with_phase is None) begin
-#     before_phase = m_end_node;
-#   end
+
+        # If no before/after/with specified, insert at end of this schedule
+        if with_phase is None and after_phase is None  and before_phase is None and start_with_phase is None  and  end_with_phase is None:
+            before_phase = self.m_end_node
 # 
 # 
 #   if (m_phase_trace) begin
@@ -656,21 +692,9 @@ class uvm_phase(uvm_object):
 # 
 #     # Implementation - Construction
 #     #------------------------------
-#   protected uvm_phase_type m_phase_type;
-#   protected uvm_phase      m_parent;     # our 'schedule' node [or points 'up' one level]
-#   uvm_phase                m_imp;        # phase imp to call when we execute this node
 # 
 #     # Implementation - State
 #     #-----------------------
-#   local uvm_phase_state    m_state;
-#   local int                m_run_count; # num times this phase has executed
-#   local process            m_phase_proc;
-#   local static int         m_default_max_ready_to_end_iters = 20;    # 20 is the initial value defined by 1800.2-2017 9.3.1.3.5
-# `ifndef UVM_ENABLE_DEPRECATED_API
-#   local
-# `endif
-#   int                      max_ready_to_end_iters = get_default_max_ready_to_end_iterations();
-#   int                      m_num_procs_not_yet_returned;
 #   extern function uvm_phase m_find_predecessor(uvm_phase phase, bit stay_in_scope=1, uvm_phase orig_phase=None);
 #   extern function uvm_phase m_find_successor(uvm_phase phase, bit stay_in_scope=1, uvm_phase orig_phase=None);
 #   extern function uvm_phase m_find_predecessor_by_name(string name, bit stay_in_scope=1, uvm_phase orig_phase=None);
@@ -691,12 +715,13 @@ class uvm_phase(uvm_object):
 # 
 #     # Implementation - Schedule
 #     #--------------------------
-#   protected bit  m_predecessors[uvm_phase];
-#   protected bit  m_successors[uvm_phase];
-#   protected uvm_phase m_end_node;
 #     # Track the currently executing real task phases (used for debug)
 #   static protected bit m_executing_phases[uvm_phase];
-#   function uvm_phase get_begin_node(); if (m_imp != null) return this; return null; endfunction
+    def get_begin_node(self):
+        if (self.m_imp != None):
+            return self
+        else:
+            return None
 #   function uvm_phase get_end_node();   return m_end_node; endfunction
 # 
 #     # Implementation - Synchronization
@@ -766,20 +791,389 @@ class uvm_phase(uvm_object):
         uvm_phase.m_phase_hopper.try_put(uvm_domain.get_common_domain())
 
         m_uvm_core_state=uvm_core_state.RUNNING
-#   forever begin
-#     uvm_phase phase;
-#     m_phase_hopper.get(phase);
-#     fork
-#       begin
-#         phase.execute_phase();
-#       end
-#     join_none
-#     #0;  # let the process start running
+        
+        while True:
+            phase = yield uvm_phase.m_phase_hopper.get()
+            print("--> start execute_phase")
+            cocotb.fork(phase.execute_phase())
+            print("<-- start execute_phase")
+   
+    @cocotb.coroutine
+    def execute_phase(self):
+        from uvm.base.coreservice import uvm_coreservice_t
+        print("TODO: uvm_phase::execute_phase " + str(type(self)))
+#   uvm_task_phase task_phase;
+#   uvm_root top;
+#   uvm_phase_state_change state_chg;
+#   uvm_coreservice_t cs;
+# 
+        cs = uvm_coreservice_t.get()
+        top = cs.get_root()
+ 
+        # If we got here by jumping forward, we must wait for
+        # all its predecessor nodes to be marked DONE.
+        # (the next conditional speeds this up)
+        # Also, this helps us fast-forward through terminal (end) nodes
+#   foreach (m_predecessors[pred])
+#     wait (pred.m_state == UVM_PHASE_DONE);
+# 
+# 
+        # If DONE (by, say, a forward jump), return immed
+        if self.m_state == uvm_phase_state.UVM_PHASE_DONE:
+            return
+
+        state_chg = uvm_phase_state_change(self.get_name())
+        state_chg.m_phase      = self
+        state_chg.m_jump_to    = None
+
+#     #---------
+#     # SYNCING:
+#     #---------
+#     # Wait for phases with which we have a sync()
+#     # relationship to be ready. Sync can be 2-way -
+#     # this additional state avoids deadlock.
+#   state_chg.m_prev_state = m_state;
+#   m_state = UVM_PHASE_SYNCING;
+#   `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(this, state_chg))
+#     #0;
+#    
+#   if (m_sync.size()) begin
+#     
+#     foreach (m_sync[i]) begin
+#       wait (m_sync[i].m_state >= UVM_PHASE_SYNCING);
+#     end
 #   end
-# endtask        
+# 
+        self.m_run_count += 1
+# 
+#   if (m_phase_trace) begin
+#     `UVM_PH_TRACE("PH/TRC/STRT","Starting phase",this,UVM_LOW)
+#   end
+# 
+# 
+        # If we're a schedule or domain, then "fake" execution
+        if self.m_phase_type != uvm_phase_type.UVM_PHASE_NODE:
+            state_chg.m_prev_state = self.m_state
+            self.m_state = uvm_phase_state.UVM_PHASE_STARTED
+#     `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(this, state_chg))
+# 
+#     #0;
+# 
+#     state_chg.m_prev_state = m_state;
+#     m_state = UVM_PHASE_EXECUTING;
+#     `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(this, state_chg))
+# 
+#     #0;
+#   end
+# 
+# 
+#   else begin # PHASE NODE
+# 
+#     #---------
+#     # STARTED:
+#     #---------
+#     state_chg.m_prev_state = m_state;
+#     m_state = UVM_PHASE_STARTED;
+#     `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(this, state_chg))
+# 
+#     m_imp.traverse(top,this,UVM_PHASE_STARTED);
+#     m_ready_to_end_count = 0 ; # reset the ready_to_end count when phase starts
+#     #0; # LET ANY WAITERS WAKE UP
+# 
+# 
+#     #if (m_imp.get_phase_type() != UVM_PHASE_TASK) begin
+#     if (!$cast(task_phase,m_imp)) begin
+# 
+        #-----------
+        # EXECUTING: (function phases)
+        #-----------
+        if not hasattr(self.m_imp, "m_traverse"):
+#        state_chg.m_prev_state = m_state;
+#        m_state = UVM_PHASE_EXECUTING;
+#        `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(this, state_chg))
+            print("TODO: traverse " + str(self.m_imp))
+            self.m_imp.traverse(top, uvm_phase_state.UVM_PHASE_EXECUTING)
+        else:
+#            self.m_executing_phases[self] = True
+ 
+#            state_chg.m_prev_state = m_state;
+#            m_state = UVM_PHASE_EXECUTING;
+#           `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(this, state_chg))
+            print("TODO: execute task phase") 
+#         fork : master_phase_process
+#           begin
+#    
+#             m_phase_proc = process::self();
+#    
+#             #-----------
+#             # EXECUTING: (task phases)
+#             #-----------
+#             task_phase.traverse(top,this,UVM_PHASE_EXECUTING);
+#    
+#             wait(0); # stay alive for later kill
+#    
+#           end
+#         join_none
+#    
+#         uvm_wait_for_nba_region(); #Give sequences, etc. a chance to object
+#   
+#         # Now wait for one of three criterion for end-of-phase.
+#         fork
+#           begin # guard
+#           
+#            fork
+#              # JUMP
+#              begin
+#                 wait (m_premature_end);
+#                 `UVM_PH_TRACE("PH/TRC/EXE/JUMP","PHASE EXIT ON JUMP REQUEST",this,UVM_DEBUG)
+#              end
+#   
+#              # WAIT_FOR_ALL_DROPPED
+#              begin
+#                bit do_ready_to_end  ; # bit used for ready_to_end iterations
+#            uvm_objection phase_done;
+#                phase_done = get_objection();
+#                # OVM semantic: don't end until objection raised or stop request
+#                if (phase_doneget_objection_total=top  or 
+#                    m_use_ovm_run_semantic  and  m_imp.get_name() == "run") begin
+#                  if (!phase_done.m_top_all_dropped)
+#                    phase_done.wait_for(UVM_ALL_DROPPED, top);
+#                  `UVM_PH_TRACE("PH/TRC/EXE/ALLDROP","PHASE EXIT ALL_DROPPED",this,UVM_DEBUG)
+#                end
+#                else begin
+#                   if (m_phase_trace) `UVM_PH_TRACE("PH/TRC/SKIP","No objections raised, skipping phase",this,UVM_LOW)
+#                end
+#                
+#                wait_for_self_and_siblings_to_drop() ;
+#                do_ready_to_end = 1;
+#                   
+#                #--------------
+#                # READY_TO_END:
+#                #--------------
+#  
+#                while (do_ready_to_end) begin
+#                  uvm_wait_for_nba_region(); # Let all siblings see no objections before traverse might raise another 
+#                  `UVM_PH_TRACE("PH_READY_TO_END","PHASE READY TO END",this,UVM_DEBUG)
+#                  m_ready_to_end_count++;
+#                  if (m_phase_trace)
+#                    `UVM_PH_TRACE("PH_READY_TO_END_CB","CALLING READY_TO_END CB",this,UVM_HIGH)
+#                  state_chg.m_prev_state = m_state;
+#                  m_state = UVM_PHASE_READY_TO_END;
+#                  `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(this, state_chg))
+#                  if (m_imp != null)
+#                    m_imp.traverse(top,this,UVM_PHASE_READY_TO_END);
+#                   
+#                  uvm_wait_for_nba_region(); # Give traverse targets a chance to object 
+# 
+#                  wait_for_self_and_siblings_to_drop();
+#                  do_ready_to_end = (m_state == UVM_PHASE_EXECUTING)  and  (m_ready_to_end_count < get_max_ready_to_end_iterations()) ; #when we don't wait in task above, we drop out of while loop
+#                end
+#              end
+#   
+#              # TIMEOUT
+#              begin
+#                if (this.get_name() == "run") begin
+#                   if (top.phase_timeout == 0)
+#                     wait(top.phase_timeout != 0);
+#                   if (m_phase_trace)
+#                     `UVM_PH_TRACE("PH/TRC/TO_WAIT", $sformatf("STARTING PHASE TIMEOUT WATCHDOG (timeout == %t)", top.phase_timeout), this, UVM_HIGH)
+#                   `uvm_delay(top.phase_timeout)
+#                   if ($time == `UVM_DEFAULT_TIMEOUT) begin
+#                      if (m_phase_trace)
+#                        `UVM_PH_TRACE("PH/TRC/TIMEOUT", "PHASE TIMEOUT WATCHDOG EXPIRED", this, UVM_LOW)
+#                      foreach (m_executing_phases[p]) begin
+#             uvm_objection p_phase_done;
+#             p_phase_done = p.get_objection();
+#                         if ((p_phase_done != null)  and  (p_phase_done.get_objection_total() > 0)) begin
+#                            if (m_phase_trace)
+#                              `UVM_PH_TRACE("PH/TRC/TIMEOUT/OBJCTN", 
+#                                            $sformatf("Phase '%s' has outstanding objections:\n%s", p.get_full_name(), p_phase_done.convert2string()),
+#                                            this,
+#                                            UVM_LOW)
+#                         end
+#                      end
+#                         
+#                      `uvm_fatal("PH_TIMEOUT",
+#                                 $sformatf("Default timeout of %0t hit, indicating a probable testbench issue",
+#                                           `UVM_DEFAULT_TIMEOUT))
+#                   end
+#                   else begin
+#                      if (m_phase_trace)
+#                        `UVM_PH_TRACE("PH/TRC/TIMEOUT", "PHASE TIMEOUT WATCHDOG EXPIRED", this, UVM_LOW)
+#                      foreach (m_executing_phases[p]) begin
+#             uvm_objection p_phase_done;
+#             p_phase_done = p.get_objection();
+#                         if ((p_phase_done != null)  and  (p_phase_done.get_objection_total() > 0)) begin
+#                            if (m_phase_trace)
+#                              `UVM_PH_TRACE("PH/TRC/TIMEOUT/OBJCTN", 
+#                                            $sformatf("Phase '%s' has outstanding objections:\n%s", p.get_full_name(), p_phase_done.convert2string()),
+#                                            this,
+#                                            UVM_LOW)
+#                         end
+#                      end
+#                         
+#                      `uvm_fatal("PH_TIMEOUT",
+#                                 $sformatf("Explicit timeout of %0t hit, indicating a probable testbench issue",
+#                                           top.phase_timeout))
+#                   end
+#                   if (m_phase_trace)
+#                     `UVM_PH_TRACE("PH/TRC/EXE/3","PHASE EXIT TIMEOUT",this,UVM_DEBUG)
+#                end # if (this.get_name() == "run")
+#                else begin
+#                   wait (0); # never unblock for non-run phase
+#                end
+#              end # if (m_phase_trace)
+# 
+#   
+#            join_any
+#            disable fork;
+#         
+#           end
+#   
+#         join # guard
+# 
+#     end
+# 
+#   end
+# 
+#   m_executing_phasesdelete=this;
+# 
+#     #---------
+#     # JUMPING:
+#     #---------
+# 
+#     # If jump_to() was called then we need to kill all the successor
+#     # phases which may still be running and then initiate the new
+#     # phase.  The return is necessary so we don't start new successor
+#     # phases.  If we are doing a forward jump then we want to set the
+#     # state of this phase's successors to UVM_PHASE_DONE.  This
+#     # will let us pretend that all the phases between here and there
+#     # were executed and completed.  Thus any dependencies will be
+#     # satisfied preventing deadlocks.
+#     # GSA TBD insert new jump support
+# 
+#   if (m_phase_type == UVM_PHASE_NODE) begin
+# 
+#     if(m_premature_end) begin
+#       if(m_jump_phase != null) begin 
+#         state_chg.m_jump_to = m_jump_phase;
+#       
+#         `uvm_info("PH_JUMP",
+#               $sformatf("phase %s (schedule %s, domain %s) is jumping to phase %s",
+#                get_name(), get_schedule_name(), get_domain_name(), m_jump_phase.get_name()),
+#               UVM_MEDIUM)
+#       end
+#       else begin
+#         `uvm_info("PH_JUMP",
+#               $sformatf("phase %s (schedule %s, domain %s) is ending prematurely",
+#                get_name(), get_schedule_name(), get_domain_name()),
+#               UVM_MEDIUM)
+#       end
+#   
+#   
+#       #0; # LET ANY WAITERS ON READY_TO_END TO WAKE UP
+#       if (m_phase_trace)
+#         `UVM_PH_TRACE("PH_END","ENDING PHASE PREMATURELY",this,UVM_HIGH)
+#     end
+#     else begin
+#       # WAIT FOR PREDECESSORS:  # WAIT FOR PREDECESSORS:
+#       # function phases only
+#       if (task_phase  is None)
+#         m_wait_for_pred();
+#     end
+#   
+#     #-------
+#     # ENDED:
+#     #-------
+#     # execute 'phase_ended' callbacks
+#     if (m_phase_trace)
+#       `UVM_PH_TRACE("PH_END","ENDING PHASE",this,UVM_HIGH)
+#     state_chg.m_prev_state = m_state;
+#     m_state = UVM_PHASE_ENDED;
+#     `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(this, state_chg))
+#     if (m_imp != null)
+#       m_imp.traverse(top,this,UVM_PHASE_ENDED);
+#     #0; # LET ANY WAITERS WAKE UP
+#   
+#   
+#     #---------
+#     # CLEANUP:
+#     #---------
+#     # kill this phase's threads
+#     state_chg.m_prev_state = m_state;
+#     if(m_premature_end) m_state = UVM_PHASE_JUMPING;
+#     else m_state = UVM_PHASE_CLEANUP ;
+#     `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(this, state_chg))
+#     if (m_phase_proc != null) begin
+#       m_phase_proc.kill();
+#       m_phase_proc = null;
+#     end
+#     #0; # LET ANY WAITERS WAKE UP
+#     begin
+#       uvm_objection objection = get_objection();
+#       if (objection != null)
+#         objection.clear();
+#     end
+#   end
+# 
+#     #------
+#     # DONE:
+#     #------
+#   m_premature_end = 0 ;
+#   if(m_jump_fwd  or  m_jump_bkwd) begin
+#     if(m_jump_fwd) begin
+#       clear_successors(UVM_PHASE_DONE,m_jump_phase);
+#     end
+#     m_jump_phase.clear_successors();
+#   end
+#   else begin
+# 
+#     if (m_phase_trace)
+#       `UVM_PH_TRACE("PH/TRC/DONE","Completed phase",this,UVM_LOW)
+#     state_chg.m_prev_state = m_state;
+#     m_state = UVM_PHASE_DONE;
+#     `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(this, state_chg))
+#     m_phase_proc = null;
+#     #0; # LET ANY WAITERS WAKE UP
+#   end
+#     #0; # LET ANY WAITERS WAKE UP
+#   begin
+#     uvm_objection objection;
+#     objection = get_objection();
+#     if (objection != null)
+#       objection.clear();
+#   end
+# 
+# #-----------
+# # SCHEDULED:
+# #-----------
+#   if(m_jump_fwd  or  m_jump_bkwd) begin
+#     void'(m_phase_hoppertry_put=m_jump_phase);
+#     m_jump_phase = null;
+#     m_jump_fwd = 0;
+#     m_jump_bkwd = 0;
+#   end
+#     # If more successors, schedule them to run now
+#   elif: (m_successors.size() == 0) begin
+#     top.set_phase_all_done()
+#   end 
+#   else begin
+#     # execute all the successors
+#     foreach (m_successors[succ]) begin
+#       if(succ.m_state < UVM_PHASE_SCHEDULED) begin
+#         state_chg.m_prev_state = succ.m_state;
+#         state_chg.m_phase = succ;
+#         succ.m_state = UVM_PHASE_SCHEDULED;
+#         `uvm_do_callbacks(uvm_phase, uvm_phase_cb, phase_state_change(succ, state_chg))
+#         #0; # LET ANY WAITERS WAKE UP
+#         void'(m_phase_hoppertry_put=succ);
+#         if (m_phase_trace)
+#           `UVM_PH_TRACE("PH/TRC/SCHEDULED",{"Scheduled from phase ",get_full_name()},succ,UVM_LOW)
+#       end
+#     end
+#   end        
         yield Timer(0)
-    
-#   extern local task  execute_phase();
+        
 #   extern local function void m_terminate_phase();
 #   extern local function void m_print_termination_state();
 #   extern local task wait_for_self_and_siblings_to_drop();
