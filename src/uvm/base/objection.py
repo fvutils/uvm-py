@@ -33,6 +33,7 @@ from uvm.base.object_globals import uvm_objection_event
 import cocotb
 from uvm.base.coreservice import uvm_coreservice_t
 from uvm.base.cmdline_processor import uvm_cmdline_processor
+from uvm.util.mailbox import Mailbox
 
 class uvm_objection_events():
     
@@ -87,7 +88,7 @@ class uvm_objection(uvm_report_object):
     # These are the contexts which have been scheduled for
     # retrieval by the background process, but which the
     # background process hasn't seen yet.
-    m_scheduled_list = [] # list of uvm_objection_context_object
+    m_scheduled_list = Mailbox() # list of uvm_objection_context_object
 
 
 
@@ -642,38 +643,21 @@ class uvm_objection(uvm_report_object):
 
     # m_execute_scheduled_forks
     # -------------------------
-
-    # background process; when non
+    
     @staticmethod
     @cocotb.coroutine
-    def m_execute_scheduled_forks():
-        # TODO:
-#     while(1) begin
-#       wait(m_scheduled_list.size() != 0);
-#       if(m_scheduled_list.size() != 0) begin
-#           uvm_objection_context_object c;
-#           # Save off the context before the fork
-#           c = m_scheduled_list.pop_front();
-#           # A re-raise can use this to figure out props (if any)
-#           c.objection.m_scheduled_contexts[c.obj] = c;
-#           # The fork below pulls out from the forked list
-#           c.objection.m_forked_list.append(c);
-#           # The fork will guard the m_forked_drain call, but
-#           # a re-raise can kill m_forked_list contexts in the delta
-#           # before the fork executes.
-#           fork : guard
-#               automatic uvm_objection objection = c.objection;
-#               begin
-#                   # Check to maike sure re-raise didn't empty the fifo
-#                   if (objection.m_forked_list.size() > 0) begin
-#                       uvm_objection_context_object ctxt;
-# 	              ctxt = objection.m_forked_list.pop_front();
-#                       # Clear it out of scheduled
-#                       objection.m_scheduled_contexts.delete(ctxt.obj);
-#                       # Move it in to forked (so re-raise can figure out props)
-#                       objection.m_forked_contexts[ctxt.obj] = ctxt;
-#                       # Save off our process handle, so a re-raise can kill it...
-#                       objection.m_drain_proc[ctxt.obj] = process::self();
+    def m_execute_fork(c):
+        objection = c.objection
+        # Check to maike sure re-raise didn't empty the fifo
+        if (len(objection.m_forked_list) > 0):
+            ctxt = objection.m_forked_list.pop(0)
+            # Clear it out of scheduled
+            objection.m_scheduled_contexts.delete(ctxt.obj)
+            # Move it in to forked (so re-raise can figure out props)
+            objection.m_forked_contexts[ctxt.obj] = ctxt
+            # Save off our process handle, so a re-raise can kill it...
+            # TODO:
+#            objection.m_drain_proc[ctxt.obj] = process::self();
 #                       # Execute the forked drain
 #                       objection.m_forked_drain(ctxt.obj, ctxt.source_obj, ctxt.description, ctxt.count, 1);
 #                       # Cleanup if we survived (no re-raises)
@@ -685,6 +669,27 @@ class uvm_objection(uvm_report_object):
 #                       m_context_pool.append(ctxt);
 #                   end
 #               end
+        pass
+
+    # background process; when non
+    @staticmethod
+    @cocotb.coroutine
+    def m_execute_scheduled_forks():
+        # Save off the context before the fork
+        # c is uvm_objection_context_object
+        while True:
+            c = yield uvm_objection.m_scheduled_list.get()
+            # A re-raise can use this to figure out props (if any)
+            c.objection.m_scheduled_contexts[c.obj] = c
+        
+            # The fork below pulls out from the forked list
+            c.objection.m_forked_list.append(c)
+            # The fork will guard the m_forked_drain call, but
+            # a re-raise can kill m_forked_list contexts in the delta
+            # before the fork executes.
+            cocotb.fork(uvm_objection.m_execute_fork(c))
+        
+#           fork : guard
 #           join_none : guard
 #       end
 #     end
